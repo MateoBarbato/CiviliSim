@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 uuid="uid://cvt8g3o4s5n6q"]
+
+[ext_resource type="Script" path="res://scenes/world/World.gd" id="1_world"]
+[ext_resource type="Script" path="res://scripts/systems/spawn_manager.gd" id="2_spawn"]
+
+[node name="World" type="Node2D"]
+script = ExtResource("1_world")
+
+[node name="TileMap" type="TileMap"]
+
+[node name="ResourceContainer" type="Node2D"]
+
+[node name="BeepContainer" type="Node2D"]
+
+[node name="SpawnManager" type="Node"]
+script = ExtResource("2_spawn")

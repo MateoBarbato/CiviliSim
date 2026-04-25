@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo circular -->
+  <circle cx="64" cy="64" r="60" fill="#4a7c59" stroke="#2d5a3f" stroke-width="4"/>
+  <!-- Beep cuerpo -->
+  <circle cx="64" cy="64" r="30" fill="#8bc34a"/>
+  <!-- Beep ojos -->
+  <circle cx="54" cy="56" r="6" fill="#2d5a3f"/>
+  <circle cx="74" cy="56" r="6" fill="#2d5a3f"/>
+  <!-- Brillo ojos -->
+  <circle cx="56" cy="54" r="2" fill="white"/>
+  <circle cx="76" cy="54" r="2" fill="white"/>
+  <!-- Beep boca -->
+  <path d="M 54 70 Q 64 78 74 70" fill="none" stroke="#2d5a3f" stroke-width="3" stroke-linecap="round"/>
+  <!-- Antenas -->
+  <line x1="50" y1="38" x2="42" y2="22" stroke="#2d5a3f" stroke-width="3" stroke-linecap="round"/>
+  <line x1="78" y1="38" x2="86" y2="22" stroke="#2d5a3f" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="42" cy="20" r="4" fill="#ffeb3b"/>
+  <circle cx="86" cy="20" r="4" fill="#ffeb3b"/>
+  <!-- Hoja decorativa -->
+  <path d="M 95 85 Q 105 75 100 65 Q 90 70 95 85" fill="#66bb6a"/>
+</svg>

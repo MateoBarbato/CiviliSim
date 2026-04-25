@@ -1,0 +1,37 @@
+[gd_scene load_steps=4 uuid="uid://btv7f2n3r4m5p"]
+
+[ext_resource type="Script" path="res://scenes/resources/ResourceNode.gd" id="1_res"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"frame": 0
+}],
+"loop": true,
+"name": &"default",
+"speed": 0.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 8.0
+
+[node name="ResourceNode" type="Node2D"]
+script = ExtResource("1_res")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_1")
+modulate = Color(0.3, 0.8, 0.3, 1)
+scale = Vector2(1.5, 1.5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="AmountLabel" type="Label" parent="."]
+offset_left = -20.0
+offset_top = -16.0
+offset_right = 20.0
+offset_bottom = 0.0
+text = "100"
+horizontal_alignment = 1
+vertical_alignment = 1

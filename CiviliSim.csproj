@@ -1,0 +1,10 @@
+<Project Sdk="Godot.NET.Sdk/4.3.0">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'linux' ">net8.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'windows' ">net8.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'macos' ">net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+</Project>
