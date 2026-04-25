@@ -218,3 +218,55 @@
 ### R4: `REPRODUCTION_CHECK_INTERVAL` duplicado [FIXED]
 **File:** `scripts/systems/reproduction_system.gd`
 **Desc:** Definido como 60.0 localmente, override de GameConfig 90.0
+
+---
+
+## Round 3 Fixes (25 Abril 2026)
+
+### R3-1: priority match misses wood/stone [FIXED]
+**File:** `scripts/systems/decision_system.gd:139-145`
+**Desc:** El match de priority solo maneja "food"/"construction"/"exploration", pero los eventos de escasez envían "wood"/"stone". Ahora mapean a CONSTRUCTION.
+
+### R3-2: COOLDOWN_TIME hardcoded 90 vs config 120 [FIXED]
+**File:** `scripts/systems/reproduction_system.gd:26`
+**Desc:** `COOLDOWN_TIME = 90.0` ignoraba `GameConfig.REPRODUCTION_COOLDOWN = 120.0`
+
+### R3-3: happiness = INITIAL_FOOD/2 = 25 [FIXED]
+**File:** `scripts/systems/colony_manager.gd:53`
+**Desc:** `_init_colony()` seteaba happiness a 25 en vez de 75
+
+### R3-4: Dead beeps leak in shelter [FIXED]
+**File:** `scenes/beep/BeepAgent.gd`
+**Desc:** Beeps muertos no se removían de `Shelter.occupants`, leak de memoria
+
+### R3-5: consume_shelter_cost non-atomic [FIXED]
+**File:** `scripts/systems/resource_manager.gd`
+**Desc:** Si remove_wood succeede pero remove_stone falla, la madera se pierde. Ahora checkea antes de deducir.
+
+### R3-6: eat() ignores hunger level [FIXED]
+**File:** `scenes/beep/BeepAgent.gd`
+**Desc:** Beeps con hambre baja consumían comida de todos modos. Ahora checkea `stats.hunger < 10.0`
+
+### R3-7: MAX_RESOURCES_ON_MAP never enforced [FIXED]
+**File:** `scenes/world/World.gd`
+**Desc:** `_spawn_periodic_resources()` spawneaba sin límite, memoria crecía indefinidamente
+
+### R3-8: ResourceManager missing class_name [FIXED]
+**File:** `scripts/systems/resource_manager.gd`
+**Desc:** Faltaba `class_name ResourceManager`, inconsistente con otros autoloads
+
+### R3-9: Victory message says 10, threshold is 15 [FIXED]
+**File:** `scenes/main/Main.gd`
+**Desc:** Hardcodeado a 10, ahora usa `GameConfig.WIN_POPULATION`
+
+### R3-10: Zoom max 3.0 vs config 2.0 [FIXED]
+**File:** `scenes/camera/CameraController.gd`
+**Desc:** `max_zoom = 3.0` ignoraba `GameConfig.CAMERA_ZOOM_MAX = 2.0`
+
+### R3-11: Float literals precision [FIXED]
+**File:** `scripts/systems/colony_manager.gd`
+**Desc:** `maxf(0,...)` y `minf(100,...)` usaban int literals
+
+### R3-12: Knowledge stat unbounded [FIXED]
+**File:** `scripts/systems/decision_system.gd`
+**Desc:** `knowledge` crecía sin límite, ahora clamped a [0, 100]
