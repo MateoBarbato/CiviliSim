@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 uuid="uid://jla3m8t1x2y3z"]
+[gd_scene load_steps=10 uuid="uid://jla3m8t1x2y3z"]
 
 [ext_resource type="Script" path="res://scenes/main/Main.gd" id="1_main"]
 [ext_resource type="Script" path="res://scenes/camera/CameraController.gd" id="2_camera"]
 [ext_resource type="Script" path="res://scripts/systems/decision_system.gd" id="3_decisions"]
+[ext_resource type="Script" path="res://scripts/systems/reproduction_system.gd" id="7_reproduction"]
 [ext_resource type="PackedScene" uuid="uid://hky2k7s0w1v2x" id="4_hud"]
 [ext_resource type="PackedScene" uuid="uid://fgx1j6r9v0u1w" id="5_decision_panel"]
 [ext_resource type="PackedScene" uuid="uid://cvt8g3o4s5n6q" id="6_world"]
@@ -25,3 +26,6 @@ data = ExtResource("4_hud")
 
 [node name="DecisionPanel" type="PackedScene" parent="."]
 data = ExtResource("5_decision_panel")
+
+[node name="ReproductionSystem" type="Node" parent="."]
+script = ExtResource("7_reproduction")

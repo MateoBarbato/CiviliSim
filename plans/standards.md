@@ -373,6 +373,14 @@ bugfix/*      → Correcciones (bugfix/hunger-calculation)
 - **Comunicación C#→GDScript:** GodotObject.Call() para invocar métodos del BeepAgent
 - **Comunicación GDScript→C#:** Script attachment directo en escena
 
+### 2025-04-25 - Reproduction System (Fase 8)
+- **ReproductionSystem:** Check cada 60s, cooldown 90s entre nacimientos
+- **Condiciones:** mín 4 Beeps, máx 50, requiere 30 comida, 60 energía por Beep
+- **Selección:** Beeps con energía >= 60 y salud >= 50
+- **Spawn:** posición entre padres con offset aleatorio
+- **Herencia:** salud promedio de padres * 1.1 (mejora generacional)
+- **Registro:** ColonyManager registra/deregistra automáticamente
+
 ### 2025-04-25 - Decision System (Fase 7)
 - **DecisionSystem como autoload:** Gestiona eventos, timers, y efectos sobre variables globales
 - **Event pool:** 9 tipos de eventos (resource_shortage, population, disaster, moral, exploration, technology)
