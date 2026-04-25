@@ -373,6 +373,14 @@ bugfix/*      → Correcciones (bugfix/hunger-calculation)
 - **Comunicación C#→GDScript:** GodotObject.Call() para invocar métodos del BeepAgent
 - **Comunicación GDScript→C#:** Script attachment directo en escena
 
+### 2025-04-25 - Decision System (Fase 7)
+- **DecisionSystem como autoload:** Gestiona eventos, timers, y efectos sobre variables globales
+- **Event pool:** 9 tipos de eventos (resource_shortage, population, disaster, moral, exploration, technology)
+- **Timer de respuesta:** 30 segundos por defecto, timeout aplica efectos por defecto
+- **Efectos:** Modifican recursos, felicidad, salud, orden social, prioridad de colonia
+- **DecisionPanel UI:** Panel flotante con descripción, barra de tiempo, y botones de opciones
+- **GameUI HUD:** Panel superior izquierdo con recursos, población, prioridad, tiempo
+
 ### 2025-04-25 - Building System (Fase 5/6)
 - **BuildingBase:** Clase base con construcción progresiva, ocupantes, capacidad
 - **ShelterBuilding:** Refugio con curación de ocupantes

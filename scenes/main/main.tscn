@@ -1,0 +1,27 @@
+[gd_scene load_steps=9 uuid="uid://jla3m8t1x2y3z"]
+
+[ext_resource type="Script" path="res://scenes/main/Main.gd" id="1_main"]
+[ext_resource type="Script" path="res://scenes/camera/CameraController.gd" id="2_camera"]
+[ext_resource type="Script" path="res://scripts/systems/decision_system.gd" id="3_decisions"]
+[ext_resource type="PackedScene" uuid="uid://hky2k7s0w1v2x" id="4_hud"]
+[ext_resource type="PackedScene" uuid="uid://fgx1j6r9v0u1w" id="5_decision_panel"]
+[ext_resource type="PackedScene" uuid="uid://cvt8g3o4s5n6q" id="6_world"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="World" type="PackedScene" parent="."]
+data = ExtResource("6_world")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(1600, 1600)
+script = ExtResource("2_camera")
+
+[node name="DecisionSystem" type="Node" parent="."]
+script = ExtResource("3_decisions")
+
+[node name="GameUI" type="PackedScene" parent="."]
+data = ExtResource("4_hud")
+
+[node name="DecisionPanel" type="PackedScene" parent="."]
+data = ExtResource("5_decision_panel")
