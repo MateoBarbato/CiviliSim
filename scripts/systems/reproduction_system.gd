@@ -13,7 +13,7 @@ signal population_warning(count: int)
 
 ## Timer de reproducción
 var reproduction_timer: float = 0.0
-const REPRODUCTION_CHECK_INTERVAL: float = 60.0
+const REPRODUCTION_CHECK_INTERVAL: float = GameConfig.REPRODUCTION_CHECK_INTERVAL
 
 ## Condiciones mínimas para reproducción
 var min_population: int = GameConfig.REPRODUCTION_MIN_POPULATION

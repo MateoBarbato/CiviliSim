@@ -110,10 +110,10 @@ func _update_visuals() -> void:
 
 
 func _regenerate(delta: float) -> void:
-	if not _is_active:
+	if _amount < _max_amount:
 		_amount += _regeneration_rate * delta
 		_amount = minf(_amount, _max_amount)
 		
-		if _amount > 0:
+		if _amount > 0 and not _is_active:
 			_is_active = true
 			_update_visuals()

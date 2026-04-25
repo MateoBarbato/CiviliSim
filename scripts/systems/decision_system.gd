@@ -17,8 +17,8 @@ var response_timer: float = 0.0
 var response_time_limit: float = GameConfig.DECISION_RESPONSE_TIME
 
 ## Intervalo entre decisiones
-var decision_interval: float = GameConfig.DECISION_INTERVAL
-var next_decision_time: float = 0.0
+var decision_timer: float = 0.0
+const DECISION_INTERVAL: float = GameConfig.DECISION_INTERVAL
 
 ## Pool de eventos posibles
 var event_pool: Array[Dictionary] = []
@@ -44,8 +44,10 @@ func _update_response_timer(delta: float) -> void:
 		_timeout_current_event()
 
 
-func _check_decision_timer(delta: float) -> void:	
-	if ColonyManager.game_time >= next_decision_time:
+func _check_decision_timer(delta: float) -> void:
+	decision_timer += delta
+	if decision_timer >= DECISION_INTERVAL:
+		decision_timer = 0.0
 		_trigger_random_event()
 
 
@@ -66,12 +68,12 @@ func _generate_event_pool() -> void:
 func _trigger_random_event() -> void:
 	if event_pool.is_empty():
 		return
-	
+
 	var event_index = randi() % event_pool.size()
 	current_event = event_pool[event_index]
 	is_event_active = true
 	response_timer = 0.0
-	next_decision_time = ColonyManager.game_time + decision_interval
+	decision_timer = 0.0
 	
 	decision_event_triggered.emit(current_event)
 	
