@@ -62,7 +62,7 @@ func _create_option_button(option: Dictionary) -> Button:
 	button.text = option["text"]
 	button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	button.custom_minimum_size = Vector2(0, 40)
-	button.connect("pressed", _on_option_selected.bind(option["id"]))
+	button.pressed.connect(_on_option_selected.bind(option["id"]))
 	
 	var style_box = StyleBoxFlat.new()
 	style_box.bg_color = Color(0.15, 0.15, 0.2, 0.9)
@@ -82,7 +82,7 @@ func _create_option_button(option: Dictionary) -> Button:
 
 
 func _on_option_selected(option_id: String) -> void:
-	DecisionSystem._resolve_decision(option_id)
+	DecisionSystem.resolve_decision(option_id)
 
 
 func _update_timer_bar() -> void:
@@ -120,6 +120,4 @@ func _animate_exit() -> void:
 	)
 
 
-func _on_decision_panel_closed() -> void:
-	hide()
-	is_visible = false
+

@@ -4,6 +4,9 @@
 class_name BeepAgent
 extends CharacterBody2D
 
+## Escena del refugio (pre-cargada)
+const SHELTER_SCENE: PackedScene = preload("res://scenes/buildings/shelter.tscn")
+
 ## Referencias
 @onready var stats: BeepStats = $BeepStats
 @onready var sprite: Sprite2D = $Sprite2D
@@ -85,6 +88,7 @@ func collect_resource(resource_node: Node) -> void:
 		stats.set_state(BeepStats.State.WORKING)
 		resource_node.collect()
 		_action_cooldown = ACTION_COOLDOWN_TIME
+		await get_tree().create_timer(ACTION_COOLDOWN_TIME).timeout
 		stats.set_state(BeepStats.State.IDLE)
 
 
@@ -258,12 +262,8 @@ func _get_build_position() -> Vector2:
 func _build_shelter(build_pos: Vector2) -> void:
 	if not ResourceManager.consume_shelter_cost():
 		return
-	
-	var shelter_scene = load("res://scenes/buildings/shelter.tscn")
-	if not shelter_scene:
-		return
-	
-	var shelter = shelter_scene.instantiate()
+
+	var shelter = SHELTER_SCENE.instantiate()
 	shelter.position = build_pos
 	
 	var parent = get_parent()

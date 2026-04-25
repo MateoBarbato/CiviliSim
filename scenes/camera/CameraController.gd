@@ -1,6 +1,7 @@
 ## Controlador de cámara con zoom y pan
 ## Permite mover la cámara con WASD/flechas y hacer zoom con el scroll
 
+class_name CameraController
 extends Camera2D
 
 ## Velocidad de movimiento
@@ -23,8 +24,7 @@ var _target_position: Vector2 = Vector2.ZERO
 ## Zoom objetivo
 var _target_zoom: Vector2 = Vector2.ONE
 
-## Beep seleccionado para seguir
-var _followed_beep: Node2D = null
+
 
 
 func _ready() -> void:
@@ -78,14 +78,4 @@ func _apply_smoothing(delta: float) -> void:
 		zoom = _target_zoom
 
 
-func follow_beep(beep: Node2D) -> void:
-	_followed_beep = beep
 
-
-func stop_following() -> void:
-	_followed_beep = null
-
-
-func _on_beep_moved() -> void:
-	if _followed_beep and is_instance_valid(_followed_beep):
-		_target_position = _followed_beep.position

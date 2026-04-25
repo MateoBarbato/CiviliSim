@@ -49,6 +49,10 @@ func _ready() -> void:
 	_update_visuals()
 
 
+func _process(delta: float) -> void:
+	_regenerate(delta)
+
+
 func set_resource_type(resource_type: ResourceType.Type) -> void:
 	_resource_type = resource_type
 	_max_amount = MAX_AMOUNTS.get(resource_type, 100.0)

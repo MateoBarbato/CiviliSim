@@ -1,6 +1,7 @@
 ## Gestiona el estado global de la colonia
 ## Autoload: ColonyManager
 
+class_name ColonyManager
 extends Node
 
 signal colony_priority_changed(priority: String)
@@ -61,9 +62,8 @@ func _init_colony() -> void:
 
 
 func start_game() -> void:
-	game_active = true
-	game_time = 0.0
 	_init_colony()
+	game_active = true
 	colony_priority = ColonyPriority.FOOD
 	_on_population_changed(0)
 

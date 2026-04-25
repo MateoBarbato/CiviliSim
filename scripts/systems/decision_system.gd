@@ -44,9 +44,7 @@ func _update_response_timer(delta: float) -> void:
 		_timeout_current_event()
 
 
-func _check_decision_timer(delta: float) -> void:
-	ColonyManager.game_time += delta
-	
+func _check_decision_timer(delta: float) -> void:	
 	if ColonyManager.game_time >= next_decision_time:
 		_trigger_random_event()
 
@@ -81,7 +79,7 @@ func _trigger_random_event() -> void:
 		print("🔔 Decision Event: ", current_event["description"])
 
 
-func _resolve_decision(option_id: String) -> void:
+func resolve_decision(option_id: String) -> void:
 	if not is_event_active:
 		return
 	
@@ -143,6 +141,8 @@ func _apply_effects(effects: Dictionary) -> void:
 						ColonyManager.set_colony_priority(ColonyManager.ColonyPriority.CONSTRUCTION)
 					"exploration":
 						ColonyManager.set_colony_priority(ColonyManager.ColonyPriority.EXPLORATION)
+			"knowledge":
+				ColonyManager.knowledge += effects[key]
 
 
 func get_response_percentage() -> float:

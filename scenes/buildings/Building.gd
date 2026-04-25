@@ -11,7 +11,7 @@ signal building_updated
 ## Tipo de edificio
 var building_type: String = "unknown"
 
-## Estado de construcci
+## Estado de construcción
 var is_under_construction: bool = true
 var construction_progress: float = 0.0
 var construction_time: float = 5.0

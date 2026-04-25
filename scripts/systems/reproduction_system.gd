@@ -4,6 +4,9 @@
 class_name ReproductionSystem
 extends Node
 
+## Escena del Beep (pre-cargada)
+const BEEP_SCENE: PackedScene = preload("res://scenes/beep/beep.tscn")
+
 signal beep_reproduced(new_beep: Node)
 signal reproduction_blocked(reason: String)
 signal population_warning(count: int)
@@ -90,7 +93,7 @@ func _check_resource_conditions() -> bool:
 	return true
 
 
-func _select_parents() -> Dictionary:
+func _select_parents() -> Dictionary?:
 	var beeps = ColonyManager.beeps
 	if beeps.size() < 2:
 		return null
@@ -130,13 +133,9 @@ func _spawn_new_beep(parents: Dictionary) -> void:
 	var parent2 = parents["parent2"]
 	
 	var spawn_pos = _calculate_spawn_position(parent1, parent2)
+
 	
-	var beep_scene = load("res://scenes/beep/beep.tscn")
-	if not beep_scene:
-		push_error("No se pudo cargar la escena del Beep")
-		return
-	
-	var new_beep = beep_scene.instantiate()
+	var new_beep = BEEP_SCENE.instantiate()
 	new_beep.position = spawn_pos
 	
 	var parent = parent1.get_parent()
@@ -151,7 +150,7 @@ func _spawn_new_beep(parents: Dictionary) -> void:
 		print("🐣 Nuevo Beep spawneado en: ", spawn_pos)
 
 
-func _calculate_spawn_position(parent1: Node, parent2: Node) -> Vector2:
+func _calculate_spawn_position(parent1: Node2D, parent2: Node2D) -> Vector2:
 	var mid_point = (parent1.position + parent2.position) / 2.0
 	var offset = Vector2(
 		(randf() - 0.5) * 60.0,
@@ -160,7 +159,7 @@ func _calculate_spawn_position(parent1: Node, parent2: Node) -> Vector2:
 	return mid_point + offset
 
 
-func _inherit_stats(new_beep: Node, parent1: Node, parent2: Node) -> void:
+func _inherit_stats(new_beep: Node2D, parent1: Node2D, parent2: Node2D) -> void:
 	if new_beep.has_method("get_stats"):
 		var stats_node = new_beep.get_node_or_null("BeepStats")
 		if stats_node:

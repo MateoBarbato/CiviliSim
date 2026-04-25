@@ -65,12 +65,5 @@ func _on_resource_changed(resource_type: String, amount: float) -> void:
 	_update_resource_labels()
 
 
-func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_debug"):
-		_toggle_debug_info()
 
 
-func _toggle_debug_info() -> void:
-	var debug_label = $HUDPanel/MarginContainer/VBoxContainer.get_node_or_null("DebugLabel")
-	if debug_label:
-		debug_label.visible = not debug_label.visible

@@ -2,7 +2,7 @@
 ## Valores balanceados para MVP1
 
 class_name GameConfig
-extends RefCounted
+extends Node
 
 # --- Dimensiones del mundo ---
 const WORLD_WIDTH: int = 200
@@ -77,5 +77,4 @@ const CAMERA_ZOOM_MIN: float = 0.5
 const CAMERA_ZOOM_MAX: float = 2.0
 const CAMERA_ZOOM_SPEED: float = 0.5
 
-func _init():
-	pass
+

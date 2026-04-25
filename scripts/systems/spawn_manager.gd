@@ -26,9 +26,6 @@ var spawned_beeps: Array = []
 var spawned_resources: Array = []
 
 
-func _ready() -> void:
-	pass
-
 
 func set_tile_map(tile_map: TileMap) -> void:
 	_tile_map = tile_map
@@ -124,10 +121,7 @@ func _get_valid_spawn_positions(count: int, min_distance: float) -> Array:
 
 
 func _is_valid_spawn_position(x: int, y: int) -> bool:
-	if _tile_map == null:
-		return true
-	# Verificar que no sea agua ni montaña
-	return true
+	return true  # TODO: Implementar validación de tiles
 
 
 func _pick_resource_type() -> ResourceType.Type:

@@ -24,10 +24,6 @@ func _ready() -> void:
 	_show_menu()
 
 
-func _process(delta: float) -> void:
-	if current_state == GameState.PLAYING:
-		game_time += delta
-
 
 func _input(event: InputEvent) -> void:
 	if current_state == GameState.PLAYING:

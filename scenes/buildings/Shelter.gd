@@ -2,7 +2,7 @@
 ## Permite descanso y recuperación de salud
 
 class_name ShelterBuilding
-extends "res://scenes/buildings/Building.gd"
+extends BuildingBase
 
 ## Tasa de curación
 var heal_rate: float = 1.0
