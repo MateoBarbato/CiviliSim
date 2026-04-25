@@ -23,7 +23,7 @@ var energy_required: float = GameConfig.REPRODUCTION_ENERGY_REQUIRED
 
 ## Cooldown entre reproducciones
 var reproduction_cooldown: float = 0.0
-const COOLDOWN_TIME: float = 90.0
+const COOLDOWN_TIME: float = GameConfig.REPRODUCTION_COOLDOWN
 
 ## Estadísticas
 var total_births: int = 0

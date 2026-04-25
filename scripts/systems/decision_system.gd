@@ -139,12 +139,16 @@ func _apply_effects(effects: Dictionary) -> void:
 				match effects[key]:
 					"food":
 						ColonyManager.set_colony_priority(ColonyManager.ColonyPriority.FOOD)
+					"wood":
+						ColonyManager.set_colony_priority(ColonyManager.ColonyPriority.CONSTRUCTION)
+					"stone":
+						ColonyManager.set_colony_priority(ColonyManager.ColonyPriority.CONSTRUCTION)
 					"construction":
 						ColonyManager.set_colony_priority(ColonyManager.ColonyPriority.CONSTRUCTION)
 					"exploration":
 						ColonyManager.set_colony_priority(ColonyManager.ColonyPriority.EXPLORATION)
 			"knowledge":
-				ColonyManager.knowledge += effects[key]
+				ColonyManager.knowledge = clampf(ColonyManager.knowledge + effects[key], 0.0, 100.0)
 
 
 func get_response_percentage() -> float:

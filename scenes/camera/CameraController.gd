@@ -8,8 +8,8 @@ extends Camera2D
 @export var move_speed: float = 300.0
 
 ## Límites de zoom
-@export var min_zoom: float = 0.5
-@export var max_zoom: float = 3.0
+@export var min_zoom: float = GameConfig.CAMERA_ZOOM_MIN
+@export var max_zoom: float = GameConfig.CAMERA_ZOOM_MAX
 
 ## Velocidad de zoom
 @export var zoom_speed: float = 0.5

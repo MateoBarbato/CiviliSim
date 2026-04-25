@@ -50,7 +50,7 @@ func _process(delta: float) -> void:
 
 func _init_colony() -> void:
 	population = 0
-	happiness = GameConfig.INITIAL_FOOD / 2.0
+	happiness = 75.0
 	health_average = 80.0
 	social_order = 70.0
 	knowledge = 0.0
@@ -137,9 +137,9 @@ func _update_colony_stats(delta: float) -> void:
 	
 	# La felicidad se ve afectada por la salud promedio
 	if health_average < 50:
-		happiness = maxf(0, happiness - 2.0 * delta)
+		happiness = maxf(0.0, happiness - 2.0 * delta)
 	elif health_average > 70:
-		happiness = minf(100, happiness + 1.0 * delta)
+		happiness = minf(100.0, happiness + 1.0 * delta)
 
 
 func _check_game_conditions() -> void:

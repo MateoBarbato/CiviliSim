@@ -1,6 +1,7 @@
 ## Gestiona los recursos globales de la colonia
 ## Autoload: ResourceManager
 
+class_name ResourceManager
 extends Node
 
 signal resource_changed(resource_type: String, amount: float)
@@ -95,7 +96,9 @@ func consume_shelter_cost() -> bool:
 	var wood_cost: float = BuildingType.get_cost_wood(BuildingType.Type.SHELTER)
 	var stone_cost: float = BuildingType.get_cost_stone(BuildingType.Type.SHELTER)
 	
-	if remove_wood(wood_cost) and remove_stone(stone_cost):
+	if wood >= wood_cost and stone >= stone_cost:
+		remove_wood(wood_cost)
+		remove_stone(stone_cost)
 		return true
 	return false
 

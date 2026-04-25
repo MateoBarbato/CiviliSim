@@ -72,6 +72,8 @@ func _spawn_initial_resources() -> void:
 
 
 func _spawn_periodic_resources() -> void:
+	if resource_container.get_child_count() >= GameConfig.MAX_RESOURCES_ON_MAP:
+		return
 	var resource = spawn_manager.spawn_resource_at(
 		spawn_manager._get_random_valid_position(),
 		spawn_manager._pick_resource_type(),

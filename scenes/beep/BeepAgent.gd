@@ -93,7 +93,7 @@ func collect_resource(resource_node: Node) -> void:
 
 
 func eat() -> void:
-	if _action_cooldown > 0 or not ResourceManager.remove_food(1.0):
+	if _action_cooldown > 0 or stats.hunger < 10.0 or not ResourceManager.remove_food(1.0):
 		return
 	
 	stats.set_state(BeepStats.State.EATING)
@@ -118,6 +118,13 @@ func rest_in_shelter(shelter: ShelterBuilding) -> void:
 
 
 func _on_beep_died() -> void:
+	# Clean up shelter occupants
+	for building in ColonyManager.buildings:
+		if building is ShelterBuilding:
+			var shelter = building as ShelterBuilding
+			if shelter and shelter.occupants.has(self):
+				shelter.exit_beep(self)
+	
 	ColonyManager.unregister_beep(self)
 	queue_free()
 

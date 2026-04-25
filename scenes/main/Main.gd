@@ -73,4 +73,4 @@ func _on_victory() -> void:
 	current_state = GameState.VICTORY
 	game_ui.hide()
 	decision_panel.hide()
-	print("VICTORIA - La colonia alcanzó 10 Beeps!")
+	print("VICTORIA - La colonia alcanzó %d Beeps!" % GameConfig.WIN_POPULATION)
