@@ -373,6 +373,13 @@ bugfix/*      → Correcciones (bugfix/hunger-calculation)
 - **Comunicación C#→GDScript:** GodotObject.Call() para invocar métodos del BeepAgent
 - **Comunicación GDScript→C#:** Script attachment directo en escena
 
+### 2025-04-25 - Building System (Fase 5/6)
+- **BuildingBase:** Clase base con construcción progresiva, ocupantes, capacidad
+- **ShelterBuilding:** Refugio con curación de ocupantes
+- **Construcción:** Beep consume recursos (15 madera, 5 piedra) y spawnea edificio
+- **Edificios registrados** en ColonyManager para tracking global
+- **Refugio:** Beeps pueden entrar, descansar y curarse (1 HP/s)
+
 ## Decisiones Pendientes
 
 - [ ] Resolución del juego (target: 1920x1080 con pixel scaling)

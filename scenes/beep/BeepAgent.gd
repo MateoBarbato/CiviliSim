@@ -100,7 +100,17 @@ func eat() -> void:
 
 
 func rest() -> void:
-	stats.set_state(BeepStats.State.RESTING)
+	var shelter = _find_nearest_shelter()
+	if shelter and shelter.has_space():
+		enter_shelter(shelter)
+	else:
+		stats.set_state(BeepStats.State.RESTING)
+
+
+func rest_in_shelter(shelter: ShelterBuilding) -> void:
+	if shelter.enter_beep(self):
+		stats.set_state(BeepStats.State.RESTING)
+		stats.assigned_task = "resting_in_shelter"
 
 
 func _on_beep_died() -> void:
@@ -159,8 +169,15 @@ func collect_nearby_resource() -> void:
 
 
 func build_nearby() -> void:
+	if not ResourceManager.has_enough_for_shelter():
+		return
+	
 	stats.set_state(BeepStats.State.WORKING)
 	stats.assigned_task = "building"
+	
+	var build_pos = _get_build_position()
+	_build_shelter(build_pos)
+	
 	_action_cooldown = 2.0
 	stats.set_state(BeepStats.State.IDLE)
 
@@ -179,6 +196,16 @@ func wander() -> void:
 	var target = position + Vector2.from_angle(angle) * distance
 	move_to(target)
 	stats.assigned_task = "wandering"
+
+
+func enter_shelter(shelter: ShelterBuilding) -> void:
+	shelter.enter_beep(self)
+	stats.set_state(BeepStats.State.RESTING)
+	stats.assigned_task = "resting_in_shelter"
+
+
+func heal(amount: float) -> void:
+	stats.health = clampf(stats.health + amount, 0.0, 100.0)
 
 
 func get_stats() -> Dictionary:
@@ -204,3 +231,41 @@ func _find_nearest_resource_type(resource_type) -> Node:
 						nearest = child
 	
 	return nearest
+
+
+func _find_nearest_shelter() -> ShelterBuilding:
+	var nearest: ShelterBuilding = null
+	var nearest_distance: float = 200.0
+	
+	for building in ColonyManager.buildings:
+		if building is ShelterBuilding:
+			var shelter = building as ShelterBuilding
+			if shelter and not shelter.is_under_construction:
+				var distance = position.distance_to(shelter.position)
+				if distance < nearest_distance:
+					nearest_distance = distance
+					nearest = shelter
+	
+	return nearest
+
+
+func _get_build_position() -> Vector2:
+	var angle = randf() * TAU
+	var distance = 80.0 + randf() * 60.0
+	return position + Vector2.from_angle(angle) * distance
+
+
+func _build_shelter(build_pos: Vector2) -> void:
+	if not ResourceManager.consume_shelter_cost():
+		return
+	
+	var shelter_scene = load("res://scenes/buildings/shelter.tscn")
+	if not shelter_scene:
+		return
+	
+	var shelter = shelter_scene.instantiate()
+	shelter.position = build_pos
+	
+	var parent = get_parent()
+	if parent:
+		parent.add_child(shelter)
