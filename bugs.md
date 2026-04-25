@@ -198,3 +198,23 @@
 ### I4: DEBUG_PRINT_DECISIONS usado para reproducción [FIXED]
 **File:** `scripts/systems/reproduction_system.gd`
 **Desc:** Debería usar `DEBUG_PRINT_REPRODUCTION`
+
+---
+
+## Round 2 Fixes (25 Abril 2026)
+
+### R1: `_regenerate` lógica invertida [FIXED]
+**File:** `scenes/resources/ResourceNode.gd`
+**Desc:** Solo regeneraba cuando `not _is_active`, debería regenerar siempre que `_amount < _max_amount`
+
+### R2: `_check_decision_timer` vacío [FIXED]
+**File:** `scripts/systems/decision_system.gd`
+**Desc:** Al remover `game_time += delta`, la función quedó sin lógica. Ahora usa timer local `decision_timer`
+
+### R3: `next_decision_time` variable removida [FIXED]
+**File:** `scripts/systems/decision_system.gd`
+**Desc:** `_trigger_random_event` referenciaba variable que ya no existía
+
+### R4: `REPRODUCTION_CHECK_INTERVAL` duplicado [FIXED]
+**File:** `scripts/systems/reproduction_system.gd`
+**Desc:** Definido como 60.0 localmente, override de GameConfig 90.0
