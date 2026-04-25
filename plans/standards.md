@@ -373,6 +373,14 @@ bugfix/*      → Correcciones (bugfix/hunger-calculation)
 - **Comunicación C#→GDScript:** GodotObject.Call() para invocar métodos del BeepAgent
 - **Comunicación GDScript→C#:** Script attachment directo en escena
 
+### 2025-04-25 - Game Balance & Debug Tools (Fase 10)
+- **Valores balanceados:** hunger 65/85, energy 25/45, health 35
+- **Población:** máx 30, victoria a 15, reproducción cada 90s con cooldown 120s
+- **Decisiones:** intervalo 45s, respuesta 35s
+- **Recursos:** 40 iniciales, spawn cada 25s, máx 60 en mapa
+- **Debug Console:** F1 toggle, muestra estado completo en tiempo real
+- **Input actions:** ui_debug (F1) agregado
+
 ### 2025-04-25 - Reproduction System (Fase 8)
 - **ReproductionSystem:** Check cada 60s, cooldown 90s entre nacimientos
 - **Condiciones:** mín 4 Beeps, máx 50, requiere 30 comida, 60 energía por Beep

@@ -170,6 +170,19 @@ ui_pause={
 "alt": false
 })]
 }
+ui_debug={
+"deadzone": 0.2,
+"events": [InputEventKey({
+"physical_keycode": 52,
+"keycode": 0,
+"pressed": false,
+"echo": false,
+"script_insert": false,
+"cmd_or_ctrl_autorepeat": false,
+"shift": false,
+"alt": false
+})]
+}
 
 [rendering]
 
