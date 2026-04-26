@@ -1,50 +1,110 @@
-## Scene del mundo 2D tileado
-## Genera el terreno proceduralmente y gestiona las capas del TileMap
-
 class_name WorldScene
 extends Node2D
 
-## Referencia al TileMap
 @onready var tile_map: TileMap = $TileMap
-
-## Referencia al SpawnManager
 @onready var spawn_manager: SpawnManager = $SpawnManager
-
-## Contenedor de recursos
 @onready var resource_container: Node2D = $ResourceContainer
-
-## Contenedor de Beeps
 @onready var beep_container: Node2D = $BeepContainer
 
-## Escenas pre-cargadas
 const BEEP_SCENE: PackedScene = preload("res://scenes/beep/beep.tscn")
 const RESOURCE_SCENE: PackedScene = preload("res://scenes/resources/resource_node.tscn")
 
-## Dimensiones del mundo
 var world_width: int = GameConfig.WORLD_WIDTH
 var world_height: int = GameConfig.WORLD_HEIGHT
 
-## Recursos iniciales a spawneear
 const INITIAL_RESOURCE_COUNT: int = 30
-
-## Intervalo de spawneo periódico
 var _spawn_timer: float = 0.0
 
-## Tipos de terreno
 enum Terrain {
-	GRASS,      # Pasto - transitable
-	WATER,      # Agua - no transitable
-	MOUNTAIN,   # Montaña - no transitable
-	SAND,       # Arena - transitable
-	FOREST      # Bosque - transitable (bonus madera)
+	GRASS,
+	WATER,
+	MOUNTAIN,
+	SAND,
+	FOREST
 }
 
-## Estadísticas del mundo generado
 var terrain_stats: Dictionary = {}
+var _terrain_map: Dictionary = {}
+
+var _terrain_colors: Dictionary = {
+	Terrain.GRASS: Color(0.3, 0.7, 0.3),
+	Terrain.WATER: Color(0.2, 0.4, 0.8),
+	Terrain.MOUNTAIN: Color(0.5, 0.5, 0.5),
+	Terrain.SAND: Color(0.9, 0.8, 0.5),
+	Terrain.FOREST: Color(0.2, 0.5, 0.2),
+}
 
 
 func _ready() -> void:
+	_generate_terrain()
+	_create_terrain_visuals()
 	_initialize_spawn_manager()
+
+
+func _generate_terrain() -> void:
+	var noise = FastNoiseLite.new()
+	noise.seed = randi()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+	noise.frequency = 0.01
+
+	var grass_count: int = 0
+	var water_count: int = 0
+	var mountain_count: int = 0
+	var sand_count: int = 0
+	var forest_count: int = 0
+
+	for x in range(world_width):
+		for y in range(world_height):
+			var noise_val: float = noise.get_noise_2d(x, y)
+			var terrain: int
+
+			if noise_val < -0.3:
+				terrain = Terrain.WATER
+				water_count += 1
+			elif noise_val < -0.1:
+				terrain = Terrain.SAND
+				sand_count += 1
+			elif noise_val > 0.5:
+				terrain = Terrain.MOUNTAIN
+				mountain_count += 1
+			elif noise_val > 0.3:
+				terrain = Terrain.FOREST
+				forest_count += 1
+			else:
+				terrain = Terrain.GRASS
+				grass_count += 1
+
+			_terrain_map[Vector2i(x, y)] = terrain
+
+	terrain_stats = {
+		"grass": grass_count,
+		"water": water_count,
+		"mountain": mountain_count,
+		"sand": sand_count,
+		"forest": forest_count,
+	}
+
+
+func _create_terrain_visuals() -> void:
+	var img = Image.create(world_width * GameConfig.TILE_SIZE, world_height * GameConfig.TILE_SIZE, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.05, 0.05, 0.05, 1))
+
+	for x in range(world_width):
+		for y in range(world_height):
+			var terrain: int = _terrain_map.get(Vector2i(x, y), Terrain.GRASS)
+			var color: Color = _terrain_colors.get(terrain, Color.WHITE)
+			var px: int = x * GameConfig.TILE_SIZE
+			var py: int = y * GameConfig.TILE_SIZE
+			for dx in range(GameConfig.TILE_SIZE):
+				for dy in range(GameConfig.TILE_SIZE):
+					img.set_pixel(px + dx, py + dy, color)
+
+	var texture = ImageTexture.create_from_image(img)
+	var sprite = Sprite2D.new()
+	sprite.texture = texture
+	sprite.position = Vector2(world_width * GameConfig.TILE_SIZE, world_height * GameConfig.TILE_SIZE) / 2
+	sprite.z_index = -1
+	add_child(sprite)
 
 
 func _process(delta: float) -> void:
@@ -100,43 +160,21 @@ func _on_resource_collected(resource_type: ResourceType.Type, amount: float) -> 
 			ResourceManager.add_stone(amount)
 
 
-func _on_resource_depleted(resource_node: Node) -> void:
+func _on_resource_depleted(_resource_node: Node) -> void:
 	pass
 
 
-# TODO: Implementar generación de terreno con TileSet
-# func _configure_noise() -> void:
-# 	_noise.seed = randi()
-# 	_noise.noise_type = FastNoiseLite.TYPE_PERLIN_SIMPLEX
-# 	_noise.period = 100.0
-# 	_noise.frequency = 0.01
-# 	_noise.fractal_type = FastNoiseLite.FRACTAL_NONE
-#
-#
-# func _configure_tile_map_layers() -> void:
-# 	pass
-#
-#
-# func _generate_terrain() -> void:
-# 	pass
-
-
-func is_walkable(position: Vector2i) -> bool:
-	# Verificar si la posición es transitable
-	# Agua y montaña no son transitables
-	var cell_terrain: Terrain = _get_terrain_at(position)
+func is_walkable(pos: Vector2i) -> bool:
+	var cell_terrain: Terrain = _get_terrain_at(pos)
 	return cell_terrain != Terrain.WATER and cell_terrain != Terrain.MOUNTAIN
 
 
-func _get_terrain_at(position: Vector2i) -> Terrain:
-	if position.x < 0 or position.x >= world_width:
+func _get_terrain_at(pos: Vector2i) -> Terrain:
+	if pos.x < 0 or pos.x >= world_width:
 		return Terrain.WATER
-	if position.y < 0 or position.y >= world_height:
+	if pos.y < 0 or pos.y >= world_height:
 		return Terrain.WATER
-	
-	# Consultar el TileMap para obtener el terreno
-	# Por ahora retornamos pasto como default
-	return Terrain.GRASS
+	return _terrain_map.get(pos, Terrain.GRASS)
 
 
 func get_random_walkable_position() -> Vector2i:
@@ -147,6 +185,4 @@ func get_random_walkable_position() -> Vector2i:
 		if is_walkable(Vector2i(x, y)):
 			return Vector2i(x, y)
 		attempts += 1
-	
-	# Fallback al centro
 	return Vector2i(world_width / 2, world_height / 2)

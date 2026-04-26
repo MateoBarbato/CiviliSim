@@ -60,11 +60,11 @@ func _handle_zoom() -> void:
 	# Zoom con scroll del mouse
 	if Input.is_action_just_pressed("camera_zoom_in"):
 		_target_zoom = _target_zoom * (1.0 - zoom_speed)
-		_target_zoom = _target_zoom.clamp(Vector2(min_zoom), Vector2(max_zoom))
+		_target_zoom = _target_zoom.clamp(Vector2(min_zoom, min_zoom), Vector2(max_zoom, max_zoom))
 	
 	if Input.is_action_just_pressed("camera_zoom_out"):
 		_target_zoom = _target_zoom * (1.0 + zoom_speed)
-		_target_zoom = _target_zoom.clamp(Vector2(min_zoom), Vector2(max_zoom))
+		_target_zoom = _target_zoom.clamp(Vector2(min_zoom, min_zoom), Vector2(max_zoom, max_zoom))
 
 
 func _apply_smoothing(delta: float) -> void:

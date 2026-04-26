@@ -1,0 +1,7 @@
+res://scenes/world/World.gd
+res://scenes/main/Main.gd
+res://scenes/world/world.tscn
+res://scenes/beep/beep.tscn
+res://scripts/data/game_config.gd
+res://scenes/beep/BeepAgent.gd
+res://scenes/resources/ResourceNode.gd

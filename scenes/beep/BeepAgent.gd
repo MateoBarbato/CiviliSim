@@ -29,24 +29,58 @@ var _current_target: Node2D = null
 var _action_cooldown: float = 0.0
 const ACTION_COOLDOWN_TIME: float = 0.5
 
+## Placeholder visual
+const BEEP_RADIUS: float = 14.0
+
+## AI decision loop
+var _decision_timer: float = 0.0
+const DECISION_INTERVAL: float = 0.5
+
+
+func _draw() -> void:
+	draw_circle(Vector2.ZERO, BEEP_RADIUS, Color(0.2, 1.0, 0.3))
+
 
 func _ready() -> void:
 	ColonyManager.register_beep(self)
 	stats.beep_died.connect(_on_beep_died)
 	stats.state_changed.connect(_on_state_changed)
+	queue_redraw()
 
 
 func _physics_process(delta: float) -> void:
 	if not stats.is_alive():
 		return
-	
+	queue_redraw()
 	if _action_cooldown > 0:
 		_action_cooldown -= delta
-	
+
 	if _is_moving:
 		_move_toward_target(delta)
-	
+
 	_update_velocity()
+
+	_decision_timer += delta
+	if _decision_timer >= DECISION_INTERVAL:
+		_decision_timer = 0.0
+		_decide_action()
+
+
+func _decide_action() -> void:
+	if _is_moving:
+		return
+	if stats.hunger > GameConfig.HUNGER_THRESHOLD_PANIC:
+		seek_food()
+	elif stats.hunger > GameConfig.HUNGER_THRESHOLD_WORK:
+		seek_food()
+	elif stats.energy < GameConfig.ENERGY_THRESHOLD_REST:
+		rest()
+	elif ResourceManager.get_food() < 10.0:
+		seek_food()
+	elif ResourceManager.get_food() < 30.0:
+		collect_nearby_resource()
+	else:
+		wander()
 
 
 func _move_toward_target(delta: float) -> void:
@@ -136,8 +170,7 @@ func _on_state_changed(new_state: String) -> void:
 
 func _update_animation(state: String) -> void:
 	if animated_sprite:
-		if animated_sprite.has_animation(state):
-			animated_sprite.play(state)
+		animated_sprite.play(state)
 
 
 func get_health() -> float:

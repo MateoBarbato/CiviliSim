@@ -1,7 +1,6 @@
 ## Gestiona el estado global de la colonia
 ## Autoload: ColonyManager
 
-class_name ColonyManager
 extends Node
 
 signal colony_priority_changed(priority: String)

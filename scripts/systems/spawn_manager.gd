@@ -66,7 +66,7 @@ func spawn_resources(count: int, parent_node: Node) -> Array:
 			push_warning("Resource scene no cargada.")
 			return resources
 		
-		var pos: Vector2I = _get_random_valid_position()
+		var pos: Vector2i = _get_random_valid_position()
 		var resource_type: ResourceType.Type = _pick_resource_type()
 		
 		var resource: Node = _resource_scene.instantiate()
@@ -80,7 +80,7 @@ func spawn_resources(count: int, parent_node: Node) -> Array:
 	return resources
 
 
-func spawn_resource_at(position: Vector2I, resource_type: ResourceType.Type, parent_node: Node) -> Node:
+func spawn_resource_at(position: Vector2i, resource_type: ResourceType.Type, parent_node: Node) -> Node:
 	if _resource_scene == null:
 		return null
 	
@@ -94,7 +94,7 @@ func spawn_resource_at(position: Vector2I, resource_type: ResourceType.Type, par
 	return resource
 
 
-func _get_random_valid_position() -> Vector2I:
+func _get_random_valid_position() -> Vector2i:
 	var attempts: int = 0
 	while attempts < 100:
 		var x: int = randi() % _world_width

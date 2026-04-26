@@ -1,21 +1,32 @@
 ; Engine configuration file.
 ; It's best edited using the editor UI and not directly,
-; but smart editing of this file should work too.
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
 config/name="CiviliSim"
-config/version="0.1.0"
 config/description="Colony/Civilization sim 2D con agentes autónomos"
+config/version="0.1.0"
 run/main_scene="res://scenes/main/main.tscn"
-config/features=PackedStringArray("4.3", "Forward Plus")
-
-[application/config]
-
-icon="res://icon.svg"
+config/features=PackedStringArray("4.6", "Forward Plus")
+config/icon="res://icon.svg"
 
 [autoload]
 
+ScriptLoader="*res://scripts/core/script_loader.gd"
+GameConfig="*res://scripts/data/game_config.gd"
+BuildingType="*res://scripts/data/building_types.gd"
+ResourceType="*res://scripts/data/resource_types.gd"
 ColonyManager="*res://scripts/systems/colony_manager.gd"
 ResourceManager="*res://scripts/systems/resource_manager.gd"
 
@@ -24,168 +35,11 @@ ResourceManager="*res://scripts/systems/resource_manager.gd"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
 
 [i18n]
 
 locale/translations_dir="res://translations/"
 
-[input]
-
-camera_zoom_in={
-"deadzone": 0.2,
-"events": [InputEventMouseButton({
-"button_index": 5,
-"ctrl_pressed": false,
-"double_click": false,
-"echo": false,
-"global_position": -1,
-"shift_pressed": false,
-"timestamp": 0,
-"button_mask": 0,
-"position": -1
-})]
-}
-camera_zoom_out={
-"deadzone": 0.2,
-"events": [InputEventMouseButton({
-"button_index": 4,
-"ctrl_pressed": false,
-"double_click": false,
-"echo": false,
-"global_position": -1,
-"shift_pressed": false,
-"timestamp": 0,
-"button_mask": 0,
-"position": -1
-})]
-}
-camera_move_left={
-"deadzone": 0.2,
-"events": [InputEventKey({
-"physical_keycode": 65,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-}), InputEventKey({
-"physical_keycode": 16908261,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-})]
-}
-camera_move_right={
-"deadzone": 0.2,
-"events": [InputEventKey({
-"physical_keycode": 68,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-}), InputEventKey({
-"physical_keycode": 16908263,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-})]
-}
-camera_move_up={
-"deadzone": 0.2,
-"events": [InputEventKey({
-"physical_keycode": 87,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-}), InputEventKey({
-"physical_keycode": 16908260,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-})]
-}
-camera_move_down={
-"deadzone": 0.2,
-"events": [InputEventKey({
-"physical_keycode": 83,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-}), InputEventKey({
-"physical_keycode": 16908262,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-})]
-}
-ui_pause={
-"deadzone": 0.2,
-"events": [InputEventKey({
-"physical_keycode": 4193399,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-}), InputEventKey({
-"physical_keycode": 91,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-})]
-}
-ui_debug={
-"deadzone": 0.2,
-"events": [InputEventKey({
-"physical_keycode": 52,
-"keycode": 0,
-"pressed": false,
-"echo": false,
-"script_insert": false,
-"cmd_or_ctrl_autorepeat": false,
-"shift": false,
-"alt": false
-})]
-}
-
 [rendering]
 
-renderer/rendering_method="forward_plus"
-textures/canvas_textures/default_texture_filter=1
 anti_aliasing/quality/msaa_3d=1

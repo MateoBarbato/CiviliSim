@@ -20,6 +20,9 @@ var _regeneration_rate: float = 1.0
 ## ¿Está activo?
 var _is_active: bool = true
 
+## Placeholder visual
+const RESOURCE_RADIUS: float = 12.0
+
 ## Referencias visuales
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var amount_label: Label = $AmountLabel
@@ -47,6 +50,13 @@ const REGENERATION_RATES: Dictionary = {
 
 func _ready() -> void:
 	_update_visuals()
+	queue_redraw()
+
+
+func _draw() -> void:
+	var color: Color = ResourceType.get_color(_resource_type)
+	draw_circle(Vector2.ZERO, RESOURCE_RADIUS, Color(0, 0, 0, 0.3))
+	draw_circle(Vector2.ZERO, RESOURCE_RADIUS - 2, color)
 
 
 func _process(delta: float) -> void:
@@ -107,6 +117,8 @@ func _update_visuals() -> void:
 		show()
 	else:
 		hide()
+	
+	queue_redraw()
 
 
 func _regenerate(delta: float) -> void:

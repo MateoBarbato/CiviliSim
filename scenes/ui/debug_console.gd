@@ -13,9 +13,21 @@ var update_timer: float = 0.0
 const UPDATE_INTERVAL: float = 0.5
 
 
+var _decision_system: Node
+
+
 func _ready() -> void:
 	hide()
 	debug_panel.visible = false
+	_decision_system = _find_decision_system()
+
+
+func _find_decision_system() -> Node:
+	if get_parent():
+		for child in get_parent().get_children():
+			if child.name == "DecisionSystem":
+				return child
+	return null
 
 
 func _input(event: InputEvent) -> void:
@@ -61,11 +73,12 @@ func _update_debug_info() -> void:
 	info.append("--- Edificios ---")
 	info.append("Edificios activos: %d" % ColonyManager.buildings.size())
 	
-	info.append("")
+info.append("")
 	info.append("--- Decisiones ---")
-	info.append("Evento activo: %s" % ["Sí" if DecisionSystem.is_event_active else "No"])
-	if DecisionSystem.is_event_active:
-		info.append("Tiempo restante: %.1fs" % DecisionSystem.get_remaining_time())
+	var ds = _decision_system
+	info.append("Evento activo: %s" % ["Sí" if ds and ds.is_event_active else "No"])
+	if ds and ds.is_event_active:
+		info.append("Tiempo restante: %.1fs" % ds.get_remaining_time())
 	
 	info.append("")
 	info.append("--- Reproductión ---")

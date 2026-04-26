@@ -1,7 +1,6 @@
 ## Configuración global del juego
 ## Valores balanceados para MVP1
 
-class_name GameConfig
 extends Node
 
 # --- Dimensiones del mundo ---
@@ -10,7 +9,7 @@ const WORLD_HEIGHT: int = 200
 const TILE_SIZE: int = 16
 
 # --- Beeps iniciales ---
-const INITIAL_BEEP_COUNT: int = 2
+const INITIAL_BEEP_COUNT: int = 4
 
 # --- Recursos iniciales ---
 const INITIAL_FOOD: float = 50.0
@@ -31,7 +30,7 @@ const ENERGY_REGEN_RESTING: float = 4.0
 const HEALTH_DECAY_RATE: float = 0.5
 
 # --- Reproducción ---
-const REPRODUCTION_MIN_POPULATION: int = 4
+const REPRODUCTION_MIN_POPULATION: int = 2
 const REPRODUCTION_MAX_POPULATION: int = 30
 const REPRODUCTION_FOOD_REQUIRED: float = 20.0
 const REPRODUCTION_ENERGY_REQUIRED: float = 65.0
@@ -68,7 +67,7 @@ const DEBUG_PRINT_REPRODUCTION: bool = true
 const DEBUG_PRINT_RESOURCES: bool = false
 
 # --- Spawn de recursos ---
-const INITIAL_RESOURCE_COUNT: int = 40
+const INITIAL_RESOURCE_COUNT: int = 50
 const RESOURCE_SPAWN_INTERVAL: float = 25.0
 const MAX_RESOURCES_ON_MAP: int = 60
 
@@ -76,5 +75,3 @@ const MAX_RESOURCES_ON_MAP: int = 60
 const CAMERA_ZOOM_MIN: float = 0.5
 const CAMERA_ZOOM_MAX: float = 2.0
 const CAMERA_ZOOM_SPEED: float = 0.5
-
-

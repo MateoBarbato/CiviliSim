@@ -1,7 +1,6 @@
 ## Definición de tipos de edificio para el MVP1
 
-class_name BuildingType
-extends RefCounted
+extends Node
 
 enum Type { SHELTER }
 
@@ -19,7 +18,7 @@ const DATA: Dictionary = {
 	}
 }
 
-static func get_name(building_type: Type) -> String:
+static func get_building_name(building_type: Type) -> String:
 	return DATA[building_type]["name"]
 
 static func get_cost_wood(building_type: Type) -> float:

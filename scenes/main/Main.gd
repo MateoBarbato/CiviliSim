@@ -3,25 +3,30 @@
 
 extends Node2D
 
+const WORLD_SCENE = preload("res://scenes/world/world.tscn")
+
 ## Referencias
-@onready var world: Node2D = $World
+var world: WorldScene = null
 @onready var camera: Camera2D = $Camera2D
-@onready var decision_system: DecisionSystem = $DecisionSystem
-@onready var game_ui: CanvasLayer = $GameUI
-@onready var decision_panel: Control = $DecisionPanel
+@onready var decision_system: Node = $DecisionSystem
+@onready var game_ui: CanvasLayer = get_node_or_null("GameUI")
+@onready var decision_panel: Control = get_node_or_null("DecisionPanel")
 
 ## Estado del juego
 enum GameState { MENU, PLAYING, PAUSED, GAME_OVER, VICTORY }
 var current_state: GameState = GameState.MENU
 
 ## Referencia a la escena del menú
-var menu_scene: PackedScene = preload("res://scenes/ui/menu.tscn") if ResourceLoader.exists("res://scenes/ui/menu.tscn") else null
+var menu_scene: PackedScene = null
 
 
 func _ready() -> void:
 	ColonyManager.game_over.connect(_on_game_over)
 	ColonyManager.victory.connect(_on_victory)
-	_show_menu()
+	world = WORLD_SCENE.instantiate()
+	add_child(world)
+	await get_tree().process_frame
+	start_game()
 
 
 
@@ -41,8 +46,10 @@ func start_game() -> void:
 	current_state = GameState.PLAYING
 	ColonyManager.start_game()
 	world.initialize_beeps()
-	game_ui.show()
-	decision_panel.show()
+	if game_ui:
+		game_ui.show()
+	if decision_panel:
+		decision_panel.show()
 
 
 func _pause_game() -> void:
@@ -64,13 +71,17 @@ func _show_menu() -> void:
 
 func _on_game_over() -> void:
 	current_state = GameState.GAME_OVER
-	game_ui.hide()
-	decision_panel.hide()
+	if game_ui:
+		game_ui.hide()
+	if decision_panel:
+		decision_panel.hide()
 	print("GAME OVER - Todos los Beeps han muerto")
 
 
 func _on_victory() -> void:
 	current_state = GameState.VICTORY
-	game_ui.hide()
-	decision_panel.hide()
+	if game_ui:
+		game_ui.hide()
+	if decision_panel:
+		decision_panel.hide()
 	print("VICTORIA - La colonia alcanzó %d Beeps!" % GameConfig.WIN_POPULATION)

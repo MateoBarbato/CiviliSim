@@ -1,7 +1,6 @@
 ## Gestiona los recursos globales de la colonia
 ## Autoload: ResourceManager
 
-class_name ResourceManager
 extends Node
 
 signal resource_changed(resource_type: String, amount: float)

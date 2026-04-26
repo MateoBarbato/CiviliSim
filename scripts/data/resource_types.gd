@@ -1,7 +1,6 @@
 ## Definición de tipos de recurso para el MVP1
 
-class_name ResourceType
-extends RefCounted
+extends Node
 
 enum Type { FOOD, WOOD, STONE }
 
@@ -32,7 +31,7 @@ const DATA: Dictionary = {
 	}
 }
 
-static func get_name(resource_type: Type) -> String:
+static func get_resource_name(resource_type: Type) -> String:
 	return DATA[resource_type]["name"]
 
 static func get_color(resource_type: Type) -> Color:

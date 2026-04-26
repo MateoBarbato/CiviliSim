@@ -53,7 +53,7 @@ func _attempt_reproduction() -> void:
 		return
 	
 	var parents = _select_parents()
-	if parents == null:
+	if parents.is_empty():
 		return
 	
 	_consume_reproduction_cost()
@@ -93,10 +93,10 @@ func _check_resource_conditions() -> bool:
 	return true
 
 
-func _select_parents() -> Dictionary?:
+func _select_parents() -> Dictionary:
 	var beeps = ColonyManager.beeps
 	if beeps.size() < 2:
-		return null
+		return {}
 	
 	var eligible = []
 	for beep in beeps:
@@ -110,7 +110,7 @@ func _select_parents() -> Dictionary?:
 		if GameConfig.DEBUG_PRINT_DECISIONS:
 			print("❌ Beeps elegibles insuficientes: ", eligible.size())
 		total_failures += 1
-		return null
+		return {}
 	
 	var parent1 = eligible[randi() % eligible.size()]
 	var parent2 = eligible[randi() % eligible.size()]

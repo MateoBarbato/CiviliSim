@@ -9,6 +9,9 @@ extends Control
 @onready var options_container: VBoxContainer = $MarginContainer/VBoxContainer/OptionsContainer
 @onready var background_color_rect: ColorRect = $BackgroundColorRect
 
+## Referencia al DecisionSystem
+var _decision_system: Node
+
 ## Estado
 var current_event: Dictionary = {}
 var is_visible: bool = false
@@ -16,13 +19,23 @@ var is_visible: bool = false
 
 func _ready() -> void:
 	hide()
-	DecisionSystem.decision_event_triggered.connect(_on_decision_event_triggered)
-	DecisionSystem.decision_resolved.connect(_on_decision_resolved)
-	DecisionSystem.decision_timed_out.connect(_on_decision_timed_out)
+	_decision_system = _get_decision_system()
+	if _decision_system:
+		_decision_system.decision_event_triggered.connect(_on_decision_event_triggered)
+		_decision_system.decision_resolved.connect(_on_decision_resolved)
+		_decision_system.decision_timed_out.connect(_on_decision_timed_out)
+
+
+func _get_decision_system() -> Node:
+	if get_parent():
+		for child in get_parent().get_children():
+			if child.name == "DecisionSystem":
+				return child
+	return null
 
 
 func _process(delta: float) -> void:
-	if is_visible and DecisionSystem.is_event_active:
+	if is_visible and _decision_system and _decision_system.is_event_active:
 		_update_timer_bar()
 
 
@@ -36,8 +49,9 @@ func _show_decision_panel(event: Dictionary) -> void:
 	is_visible = true
 	
 	event_label.text = event["description"]
-	timer_bar.max_value = DecisionSystem.response_time_limit
-	timer_bar.value = DecisionSystem.response_time_limit
+	if _decision_system:
+		timer_bar.max_value = _decision_system.response_time_limit
+		timer_bar.value = _decision_system.response_time_limit
 	timer_bar.modulate = Color.YELLOW
 	
 	_clear_options()
@@ -82,16 +96,16 @@ func _create_option_button(option: Dictionary) -> Button:
 
 
 func _on_option_selected(option_id: String) -> void:
-	DecisionSystem.resolve_decision(option_id)
+	_decision_system.resolve_decision(option_id)
 
 
 func _update_timer_bar() -> void:
-	var remaining = DecisionSystem.get_remaining_time()
+	var remaining = _decision_system.get_remaining_time()
 	timer_bar.value = remaining
 	
-	if remaining < DecisionSystem.response_time_limit * 0.3:
+	if remaining < _decision_system.response_time_limit * 0.3:
 		timer_bar.modulate = Color.RED
-	elif remaining < DecisionSystem.response_time_limit * 0.6:
+	elif remaining < _decision_system.response_time_limit * 0.6:
 		timer_bar.modulate = Color.ORANGE
 	else:
 		timer_bar.modulate = Color.YELLOW

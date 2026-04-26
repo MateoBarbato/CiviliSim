@@ -6,11 +6,11 @@
 [node name="World" type="Node2D"]
 script = ExtResource("1_world")
 
-[node name="TileMap" type="TileMap"]
+[node name="TileMap" type="TileMap" parent="."]
 
-[node name="ResourceContainer" type="Node2D"]
+[node name="ResourceContainer" type="Node2D" parent="."]
 
-[node name="BeepContainer" type="Node2D"]
+[node name="BeepContainer" type="Node2D" parent="."]
 
-[node name="SpawnManager" type="Node"]
+[node name="SpawnManager" type="Node" parent="."]
 script = ExtResource("2_spawn")

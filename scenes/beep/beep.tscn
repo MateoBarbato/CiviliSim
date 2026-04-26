@@ -1,8 +1,7 @@
-[gd_scene load_steps=5 uuid="uid://dvw9h4p6t7r8s"]
+[gd_scene load_steps=4 uuid="uid://dvw9h4p6t7r8s"]
 
 [ext_resource type="Script" path="res://scenes/beep/BeepAgent.gd" id="1_agent"]
 [ext_resource type="Script" path="res://scripts/agents/beep_stats.gd" id="2_stats"]
-[ext_resource type="Script" path="res://scripts/core/BeepBehaviorBridge.cs" id="3_bridge"]
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_beep"]
 animations = [{
@@ -59,11 +58,8 @@ radius = 64.0
 [node name="Beep" type="CharacterBody2D"]
 script = ExtResource("1_agent")
 
-[node name="BeepStats" type="Node"]
+[node name="BeepStats" type="Node" parent="."]
 script = ExtResource("2_stats")
-
-[node name="BeepBehavior" type="Node"]
-script = ExtResource("3_bridge")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(1.0, 1.0)
