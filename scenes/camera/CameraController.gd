@@ -34,37 +34,36 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_handle_movement(delta)
-	_handle_zoom()
 	_apply_smoothing(delta)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mouse_evt = event as InputEventMouseButton
+		if mouse_evt.button_index == MOUSE_BUTTON_WHEEL_UP and mouse_evt.pressed:
+			_target_zoom = _target_zoom * (1.0 - zoom_speed)
+			_target_zoom = _target_zoom.clamp(Vector2(min_zoom, min_zoom), Vector2(max_zoom, max_zoom))
+		elif mouse_evt.button_index == MOUSE_BUTTON_WHEEL_DOWN and mouse_evt.pressed:
+			_target_zoom = _target_zoom * (1.0 + zoom_speed)
+			_target_zoom = _target_zoom.clamp(Vector2(min_zoom, min_zoom), Vector2(max_zoom, max_zoom))
 
 
 func _handle_movement(delta: float) -> void:
 	var direction: Vector2 = Vector2.ZERO
 	
 	# WASD o flechas
-	if Input.is_action_pressed("camera_move_left"):
+	if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT):
 		direction.x -= 1
-	if Input.is_action_pressed("camera_move_right"):
+	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
 		direction.x += 1
-	if Input.is_action_pressed("camera_move_up"):
+	if Input.is_key_pressed(KEY_W) or Input.is_key_pressed(KEY_UP):
 		direction.y -= 1
-	if Input.is_action_pressed("camera_move_down"):
+	if Input.is_key_pressed(KEY_S) or Input.is_key_pressed(KEY_DOWN):
 		direction.y += 1
 	
 	if direction != Vector2.ZERO:
 		direction = direction.normalized()
 		_target_position += direction * move_speed * delta
-
-
-func _handle_zoom() -> void:
-	# Zoom con scroll del mouse
-	if Input.is_action_just_pressed("camera_zoom_in"):
-		_target_zoom = _target_zoom * (1.0 - zoom_speed)
-		_target_zoom = _target_zoom.clamp(Vector2(min_zoom, min_zoom), Vector2(max_zoom, max_zoom))
-	
-	if Input.is_action_just_pressed("camera_zoom_out"):
-		_target_zoom = _target_zoom * (1.0 + zoom_speed)
-		_target_zoom = _target_zoom.clamp(Vector2(min_zoom, min_zoom), Vector2(max_zoom, max_zoom))
 
 
 func _apply_smoothing(delta: float) -> void:
@@ -76,6 +75,3 @@ func _apply_smoothing(delta: float) -> void:
 	else:
 		position = _target_position
 		zoom = _target_zoom
-
-
-

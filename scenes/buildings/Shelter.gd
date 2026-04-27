@@ -10,12 +10,22 @@ var heal_rate: float = 1.0
 ## Beeps dentro del refugio
 var occupants: Array = []
 
+## Placeholder visual
+const SHELTER_RADIUS: float = 20.0
+
+
+func _draw() -> void:
+	draw_circle(Vector2.ZERO, SHELTER_RADIUS, Color(0.6, 0.5, 0.4, 0.5))
+	draw_circle(Vector2.ZERO, SHELTER_RADIUS - 3, Color(0.7, 0.6, 0.5, 0.3))
+	queue_redraw()
+
 
 func _ready() -> void:
 	building_type = "shelter"
 	construction_time = BuildingType.get_build_time(BuildingType.Type.SHELTER)
 	capacity = BuildingType.get_capacity(BuildingType.Type.SHELTER)
 	super._ready()
+	queue_redraw()
 
 
 func _process(delta: float) -> void:

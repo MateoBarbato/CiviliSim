@@ -62,9 +62,9 @@ Beep Behavior Tree
 │   └── Reproducirse
 │
 └── Si no hay tarea urgente
-    ├── Socializar
-    ├── Descansar
-    └── Aprender
+	├── Socializar
+	├── Descansar
+	└── Aprender
 
 La parte interesante es que el jugador no dice “Beep 1, cortá madera”. El jugador dice algo como:
 

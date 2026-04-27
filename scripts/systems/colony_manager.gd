@@ -100,7 +100,7 @@ func set_colony_priority(priority: ColonyPriority) -> void:
 	colony_priority_changed.emit(_get_priority_name(priority))
 	
 	if debug_mode:
-		print_debug("Prioridad de colonia cambiada a: ", _get_priority_name(priority))
+		print("Prioridad de colonia cambiada a: ", _get_priority_name(priority))
 
 
 func _get_priority_name(priority: ColonyPriority) -> String:

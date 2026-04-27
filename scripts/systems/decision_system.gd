@@ -26,6 +26,8 @@ var event_pool: Array[Dictionary] = []
 
 func _ready() -> void:
 	_generate_event_pool()
+	# Primer evento más rápido para feedback del jugador
+	decision_timer = DECISION_INTERVAL - 5.0
 
 
 func _process(delta: float) -> void:
@@ -69,8 +71,12 @@ func _trigger_random_event() -> void:
 	if event_pool.is_empty():
 		return
 
-	var event_index = randi() % event_pool.size()
-	current_event = event_pool[event_index]
+	var candidates: Array[Dictionary] = _build_contextual_event_pool()
+	if candidates.is_empty():
+		candidates = event_pool
+
+	var event_index = randi() % candidates.size()
+	current_event = candidates[event_index]
 	is_event_active = true
 	response_timer = 0.0
 	decision_timer = 0.0
@@ -79,6 +85,85 @@ func _trigger_random_event() -> void:
 	
 	if GameConfig.DEBUG_PRINT_DECISIONS:
 		print("🔔 Decision Event: ", current_event["description"])
+
+
+func _build_contextual_event_pool() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var state: Dictionary = ResourceManager.get_resource_state()
+	var food: float = state.get("food", 0.0)
+	var wood: float = state.get("wood", 0.0)
+	var stone: float = state.get("stone", 0.0)
+	var pop: int = ColonyManager.population
+	var happiness: float = ColonyManager.happiness
+	var health: float = ColonyManager.health_average
+
+	for event in event_pool:
+		var copies := _event_weight(event, food, wood, stone, pop, happiness, health)
+		for i in range(copies):
+			out.append(event)
+
+	return out
+
+
+func _event_weight(event: Dictionary, food: float, wood: float, stone: float, pop: int, happiness: float, health: float) -> int:
+	var event_type: String = event.get("type", "")
+	match event_type:
+		"resource_shortage":
+			var res: String = event.get("resource", "")
+			if res == "food":
+				if food < 40.0:
+					return 5
+				if food < 80.0:
+					return 3
+				return 0
+			if res == "wood":
+				if wood < 20.0:
+					return 4
+				if wood < 45.0:
+					return 2
+				return 0
+			if res == "stone":
+				if stone < 15.0:
+					return 4
+				if stone < 35.0:
+					return 2
+				return 0
+		"population_growth":
+			if pop >= max(4, int(GameConfig.REPRODUCTION_MAX_POPULATION * 0.4)):
+				return 3
+			return 1
+		"disaster":
+			var disaster: String = event.get("disaster", "")
+			if disaster == "famine":
+				if food < 30.0:
+					return 4
+				if food < 60.0:
+					return 2
+				return 0
+			if disaster == "disease":
+				if health < 55.0:
+					return 4
+				if health < 70.0:
+					return 2
+				return 1
+		"moral":
+			if happiness < 45.0:
+				return 4
+			if happiness < 65.0:
+				return 2
+			return 1
+		"exploration":
+			if food > 60.0 and wood > 40.0:
+				return 2
+			return 1
+		"technology":
+			if food > 55.0 and wood > 35.0 and stone > 25.0:
+				return 2
+			return 1
+		_:
+			return 1
+
+	return 1
 
 
 func resolve_decision(option_id: String) -> void:

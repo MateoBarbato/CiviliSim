@@ -4,6 +4,8 @@ const WORLD_SCENE = preload("res://scenes/world/world.tscn")
 
 var world: WorldScene = null
 @onready var game_viewport: SubViewport = $SubViewportContainer/GameViewport
+@onready var camera: Camera2D = $SubViewportContainer/GameViewport/Camera2D
+@onready var reproduction_system: ReproductionSystem = $SubViewportContainer/GameViewport/ReproductionSystem
 
 @onready var food_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/FoodLabel
 @onready var wood_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/WoodLabel
@@ -13,6 +15,8 @@ var world: WorldScene = null
 @onready var health_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/HealthLabel
 @onready var order_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/OrderLabel
 @onready var time_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/TimeLabel
+@onready var beep_states_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/BeepStatesLabel
+@onready var fertility_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/FertilityLabel
 
 enum GameState { PLAYING, PAUSED, GAME_OVER, VICTORY }
 var current_state: GameState = GameState.PLAYING
@@ -22,8 +26,13 @@ var hud_update_timer: float = 0.0
 func _ready() -> void:
 	ColonyManager.game_over.connect(_on_game_over)
 	ColonyManager.victory.connect(_on_victory)
-	
-	
+
+	# Centrar cámara según tamaño de mundo configurado
+	var world_center := Vector2(
+		GameConfig.WORLD_WIDTH * GameConfig.TILE_SIZE,
+		GameConfig.WORLD_HEIGHT * GameConfig.TILE_SIZE
+	) / 2.0
+	camera.position = world_center
 	
 	# World dentro del SubViewport
 	world = WORLD_SCENE.instantiate()
@@ -74,6 +83,27 @@ func _update_hud() -> void:
 	var minutes = int(ColonyManager.game_time / 60.0)
 	var seconds = int(ColonyManager.game_time) % 60
 	time_label.text = "⏱ %02d:%02d" % [minutes, seconds]
+
+	var collecting := 0
+	var moving := 0
+	var resting := 0
+	for beep in ColonyManager.beeps:
+		if beep == null or beep.is_queued_for_deletion() or not beep.has_method("get_stats"):
+			continue
+		var beep_state: String = beep.get_stats().get("state", "")
+		match beep_state:
+			"working":
+				collecting += 1
+			"moving":
+				moving += 1
+			"resting":
+				resting += 1
+	beep_states_label.text = "🤖 C:%d M:%d R:%d" % [collecting, moving, resting]
+
+	var fertility_pct := 0
+	if reproduction_system and reproduction_system.has_method("get_statistics"):
+		fertility_pct = int(reproduction_system.get_statistics().get("fertility_progress", 0.0))
+	fertility_label.text = "💞 %d%%" % fertility_pct
 
 
 func _input(event: InputEvent) -> void:

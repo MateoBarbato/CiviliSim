@@ -36,9 +36,9 @@ const COLLECTION_AMOUNTS: Dictionary = {
 }
 
 const MAX_AMOUNTS: Dictionary = {
-	ResourceType.Type.FOOD: 80.0,
-	ResourceType.Type.WOOD: 60.0,
-	ResourceType.Type.STONE: 40.0
+	ResourceType.Type.FOOD: 100.0,
+	ResourceType.Type.WOOD: 100.0,
+	ResourceType.Type.STONE: 100.0
 }
 
 const REGENERATION_RATES: Dictionary = {
@@ -112,6 +112,8 @@ func _update_visuals() -> void:
 	
 	var color: Color = ResourceType.get_color(_resource_type)
 	sprite.modulate = color
+	if amount_label:
+		amount_label.text = str(int(round(_amount)))
 	
 	if _is_active:
 		show()

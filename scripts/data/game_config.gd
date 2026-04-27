@@ -4,8 +4,8 @@
 extends Node
 
 # --- Dimensiones del mundo ---
-const WORLD_WIDTH: int = 200
-const WORLD_HEIGHT: int = 200
+const WORLD_WIDTH: int = 300
+const WORLD_HEIGHT: int = 300
 const TILE_SIZE: int = 16
 
 # --- Beeps iniciales ---
@@ -33,9 +33,9 @@ const HEALTH_DECAY_RATE: float = 0.5
 const REPRODUCTION_MIN_POPULATION: int = 2
 const REPRODUCTION_MAX_POPULATION: int = 30
 const REPRODUCTION_FOOD_REQUIRED: float = 20.0
-const REPRODUCTION_ENERGY_REQUIRED: float = 65.0
-const REPRODUCTION_CHECK_INTERVAL: float = 90.0
-const REPRODUCTION_COOLDOWN: float = 120.0
+const REPRODUCTION_ENERGY_REQUIRED: float = 45.0
+const REPRODUCTION_CHECK_INTERVAL: float = 45.0
+const REPRODUCTION_COOLDOWN: float = 90.0
 
 # --- Decisiones ---
 const DECISION_INTERVAL: float = 45.0
@@ -62,6 +62,7 @@ const SAVE_PATH: String = "user://saves/auto_save.json"
 # --- Debug ---
 const DEBUG_DRAW_PATHS: bool = false
 const DEBUG_DRAW_BEHAVIOR_TREE: bool = false
+const DEBUG_SHOW_BEEP_OVERLAY: bool = true
 const DEBUG_PRINT_DECISIONS: bool = true
 const DEBUG_PRINT_REPRODUCTION: bool = true
 const DEBUG_PRINT_RESOURCES: bool = false

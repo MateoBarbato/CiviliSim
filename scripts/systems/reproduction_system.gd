@@ -28,6 +28,7 @@ const COOLDOWN_TIME: float = GameConfig.REPRODUCTION_COOLDOWN
 ## Estadísticas
 var total_births: int = 0
 var total_failures: int = 0
+var fertility_progress: float = 0.0
 
 
 func _process(delta: float) -> void:
@@ -44,24 +45,35 @@ func _process(delta: float) -> void:
 
 func _attempt_reproduction() -> void:
 	if reproduction_cooldown > 0:
+		fertility_progress = maxf(0.0, fertility_progress - 5.0)
 		return
 	
 	if not _check_population_conditions():
 		return
 	
 	if not _check_resource_conditions():
+		fertility_progress = maxf(0.0, fertility_progress - 8.0)
 		return
 	
 	var parents = _select_parents()
 	if parents.is_empty():
+		fertility_progress = maxf(0.0, fertility_progress - 4.0)
+		return
+
+	# Progreso paulatino: la reproducción sube por etapas (más orgánico)
+	fertility_progress += 35.0
+	if fertility_progress < 100.0:
+		if GameConfig.DEBUG_PRINT_REPRODUCTION:
+			print("ℹ️ Progreso de reproducción: ", int(fertility_progress), "%")
 		return
 	
 	_consume_reproduction_cost()
 	_spawn_new_beep(parents)
 	reproduction_cooldown = COOLDOWN_TIME
+	fertility_progress = 0.0
 	total_births += 1
 	
-	if GameConfig.DEBUG_PRINT_DECISIONS:
+	if GameConfig.DEBUG_PRINT_REPRODUCTION:
 		print("🐣 Beep nacido! Población: ", ColonyManager.population + 1)
 
 
@@ -69,13 +81,13 @@ func _check_population_conditions() -> bool:
 	var current_pop = ColonyManager.population
 	
 	if current_pop < min_population:
-		if GameConfig.DEBUG_PRINT_DECISIONS:
+		if GameConfig.DEBUG_PRINT_REPRODUCTION:
 			print("❌ Población muy baja para reproducir: ", current_pop)
 		total_failures += 1
 		return false
 	
 	if current_pop >= max_population:
-		if GameConfig.DEBUG_PRINT_DECISIONS:
+		if GameConfig.DEBUG_PRINT_REPRODUCTION:
 			print("❌ Población máxima alcanzada: ", current_pop)
 		total_failures += 1
 		return false
@@ -85,7 +97,7 @@ func _check_population_conditions() -> bool:
 
 func _check_resource_conditions() -> bool:
 	if ResourceManager.get_food() < food_required:
-		if GameConfig.DEBUG_PRINT_DECISIONS:
+		if GameConfig.DEBUG_PRINT_REPRODUCTION:
 			print("❌ Comida insuficiente para reproducción")
 		total_failures += 1
 		return false
@@ -98,16 +110,25 @@ func _select_parents() -> Dictionary:
 	if beeps.size() < 2:
 		return {}
 	
-	var eligible = []
+	var eligible: Array = []
+	var fallback: Array = []
 	for beep in beeps:
 		if beep == null or beep.is_queued_for_deletion():
 			continue
-		if beep.has_method("get_energy") and beep.get_energy() >= energy_required:
-			if beep.has_method("get_health") and beep.get_health() >= 50.0:
-				eligible.append(beep)
+		if not (beep.has_method("get_energy") and beep.has_method("get_health")):
+			continue
+		var energy: float = beep.get_energy()
+		var health: float = beep.get_health()
+		if energy >= energy_required and health >= 45.0:
+			eligible.append(beep)
+		elif energy >= energy_required - 15.0 and health >= 35.0:
+			fallback.append(beep)
+
+	if eligible.size() < 2 and fallback.size() >= 2:
+		eligible = fallback
 	
 	if eligible.size() < 2:
-		if GameConfig.DEBUG_PRINT_DECISIONS:
+		if GameConfig.DEBUG_PRINT_REPRODUCTION:
 			print("❌ Beeps elegibles insuficientes: ", eligible.size())
 		total_failures += 1
 		return {}
@@ -146,7 +167,7 @@ func _spawn_new_beep(parents: Dictionary) -> void:
 	
 	beep_reproduced.emit(new_beep)
 	
-	if GameConfig.DEBUG_PRINT_DECISIONS:
+	if GameConfig.DEBUG_PRINT_REPRODUCTION:
 		print("🐣 Nuevo Beep spawneado en: ", spawn_pos)
 
 
@@ -174,7 +195,8 @@ func get_statistics() -> Dictionary:
 		"total_births": total_births,
 		"total_failures": total_failures,
 		"current_population": ColonyManager.population,
-		"reproduction_cooldown": reproduction_cooldown
+		"reproduction_cooldown": reproduction_cooldown,
+		"fertility_progress": fertility_progress
 	}
 
 
@@ -187,3 +209,4 @@ func reset() -> void:
 	reproduction_cooldown = 0.0
 	total_births = 0
 	total_failures = 0
+	fertility_progress = 0.0
