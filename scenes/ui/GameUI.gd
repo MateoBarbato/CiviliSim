@@ -1,23 +1,42 @@
-## HUD principal del juego
-## Muestra recursos, población y estado de la colonia
-
 extends CanvasLayer
 
-## Referencias a elementos del HUD
-@onready var food_label: Label = $HUDPanel/MarginContainer/VBoxContainer/ResourcesHBox/FoodLabel
-@onready var wood_label: Label = $HUDPanel/MarginContainer/VBoxContainer/ResourcesHBox/WoodLabel
-@onready var stone_label: Label = $HUDPanel/MarginContainer/VBoxContainer/ResourcesHBox/StoneLabel
-@onready var population_label: Label = $HUDPanel/MarginContainer/VBoxContainer/ResourcesHBox/PopulationLabel
-@onready var priority_label: Label = $HUDPanel/MarginContainer/VBoxContainer/PriorityLabel
-@onready var game_time_label: Label = $HUDPanel/MarginContainer/VBoxContainer/TimeLabel
+@onready var food_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/FoodLabel
+@onready var wood_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/WoodLabel
+@onready var stone_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/StoneLabel
+@onready var pop_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/PopLabel
+@onready var happiness_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/HappinessLabel
+@onready var health_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/HealthLabel
+@onready var order_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/OrderLabel
+@onready var time_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/TimeLabel
 
-## Timer para actualizar el HUD
 var hud_update_timer: float = 0.0
-const HUD_UPDATE_INTERVAL: float = 0.25
+const HUD_UPDATE_INTERVAL: float = 0.5
+
+
+func _create_style(bg: Color, border: Color = Color.TRANSPARENT, radius: int = 8) -> StyleBoxFlat:
+	var s = StyleBoxFlat.new()
+	s.bg_color = bg
+	s.border_color = border
+	if border != Color.TRANSPARENT:
+		s.set_border_width_all(2)
+	s.set_corner_radius_all(radius)
+	return s
 
 
 func _ready() -> void:
-	ResourceManager.resource_changed.connect(_on_resource_changed)
+	# Estilos sidebar
+	var sidebar = $Sidebar
+	sidebar.add_theme_stylebox_override("panel", _create_style(Color(0.08, 0.08, 0.1)))
+	
+	# Estilos stats
+	var stats = $Sidebar/StatsPanel
+	stats.add_theme_stylebox_override("panel", _create_style(Color(0.12, 0.12, 0.15), Color(0.25, 0.25, 0.3)))
+	
+	# Estilos decision
+	var decision = $Sidebar/DecisionPanel
+	decision.add_theme_stylebox_override("panel", _create_style(Color(0.12, 0.12, 0.15), Color(0.25, 0.25, 0.3)))
+	
+	_update_hud()
 
 
 func _process(delta: float) -> void:
@@ -28,42 +47,15 @@ func _process(delta: float) -> void:
 
 
 func _update_hud() -> void:
-	_update_resource_labels()
-	_update_population()
-	_update_priority()
-	_update_game_time()
-
-
-func _update_resource_labels() -> void:
 	var state = ResourceManager.get_resource_state()
 	food_label.text = "🍖 %d" % int(state["food"])
 	wood_label.text = "🪵 %d" % int(state["wood"])
 	stone_label.text = "🪨 %d" % int(state["stone"])
-
-
-func _update_population() -> void:
-	population_label.text = "👥 %d" % ColonyManager.population
-
-
-func _update_priority() -> void:
-	match ColonyManager.colony_priority:
-		ColonyManager.ColonyPriority.FOOD:
-			priority_label.text = "⚡ Prioridad: Comida"
-		ColonyManager.ColonyPriority.CONSTRUCTION:
-			priority_label.text = "🔨 Prioridad: Construcción"
-		ColonyManager.ColonyPriority.EXPLORATION:
-			priority_label.text = "🗺️ Prioridad: Exploración"
-
-
-func _update_game_time() -> void:
+	pop_label.text = "👥 %d / %d" % [ColonyManager.population, GameConfig.REPRODUCTION_MAX_POPULATION]
+	happiness_label.text = "😊 %.0f" % ColonyManager.happiness
+	health_label.text = "❤️ %.0f" % ColonyManager.health_average
+	order_label.text = "⚖️ %.0f" % ColonyManager.social_order
+	
 	var minutes = int(ColonyManager.game_time / 60.0)
 	var seconds = int(ColonyManager.game_time) % 60
-	game_time_label.text = "⏱️ %02d:%02d" % [minutes, seconds]
-
-
-func _on_resource_changed(resource_type: String, amount: float) -> void:
-	_update_resource_labels()
-
-
-
-
+	time_label.text = "⏱ %02d:%02d" % [minutes, seconds]

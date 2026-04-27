@@ -23,10 +23,16 @@ func _ready() -> void:
 
 
 func _find_decision_system() -> Node:
-	if get_parent():
-		for child in get_parent().get_children():
+	var parent = get_parent()
+	while parent:
+		for child in parent.get_children():
 			if child.name == "DecisionSystem":
 				return child
+			if child is SubViewport:
+				for sub_child in child.get_children():
+					if sub_child.name == "DecisionSystem":
+						return sub_child
+		parent = parent.get_parent()
 	return null
 
 
@@ -73,7 +79,7 @@ func _update_debug_info() -> void:
 	info.append("--- Edificios ---")
 	info.append("Edificios activos: %d" % ColonyManager.buildings.size())
 	
-info.append("")
+	info.append("")
 	info.append("--- Decisiones ---")
 	var ds = _decision_system
 	info.append("Evento activo: %s" % ["Sí" if ds and ds.is_event_active else "No"])

@@ -2,20 +2,9 @@
 
 [ext_resource type="Script" path="res://scenes/ui/GameUI.gd" id="1_ui"]
 
-[node name="GameUI" type="CanvasLayer"]
-script = ExtResource("1_ui")
-
-[node name="HUDPanel" type="Panel" parent="."]
-layout_mode = 3
-anchors_preset = 2
-anchor_right = 0.5
-anchor_bottom = 0.0
-offset_bottom = -10.0
-grow_horizontal = 2
-
-[node name="StyleBoxFlat" type="StyleBoxFlat" parent="HUDPanel"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
 bg_color = Color(0.1, 0.1, 0.15, 0.85)
-border_color = Color(0.3, 0.3, 0.4)
+border_color = Color(0.3, 0.3, 0.4, 1)
 border_width_top = 2
 border_width_left = 2
 border_width_right = 2
@@ -24,6 +13,24 @@ corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_left = 10
 corner_radius_bottom_right = 10
+
+[node name="GameUI" type="CanvasLayer"]
+script = ExtResource("1_ui")
+
+[node name="HUDPanel" type="Panel" parent="."]
+layout_mode = 3
+anchors_preset = 12
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 310.0
+offset_bottom = 100.0
+grow_horizontal = 0
+grow_vertical = 0
+self_stylebox_override/normal = SubResource("StyleBoxFlat_hud")
 
 [node name="MarginContainer" type="MarginContainer" parent="HUDPanel"]
 layout_mode = 1
