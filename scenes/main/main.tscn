@@ -19,8 +19,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 stretch = true
-stretch_mode = 0
-expand = false
+stretch_mode = 1
+expand = true
 
 [node name="GameViewport" type="SubViewport" parent="SubViewportContainer"]
 size = Vector2i(1600, 900)
