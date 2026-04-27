@@ -1,11 +1,9 @@
-extends HBoxContainer
+extends Control
 
 const WORLD_SCENE = preload("res://scenes/world/world.tscn")
 
 var world: WorldScene = null
-@onready var game_viewport: SubViewport = $GameViewport
-@onready var game_view: TextureRect = $GameView
-@onready var sidebar: VBoxContainer = $Sidebar
+@onready var game_viewport: SubViewport = $SubViewportContainer/GameViewport
 
 @onready var food_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/FoodLabel
 @onready var wood_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/WoodLabel
@@ -25,13 +23,7 @@ func _ready() -> void:
 	ColonyManager.game_over.connect(_on_game_over)
 	ColonyManager.victory.connect(_on_victory)
 	
-	# SubViewport → TextureRect
-	var vp_texture = ViewportTexture.new()
-	vp_texture.viewport_path = game_viewport.get_path()
-	game_view.texture = vp_texture
 	
-	# Actualizar ViewportTexture cada frame
-	game_viewport.connect("size_changed", Callable(self, "_on_viewport_size_changed"))
 	
 	# World dentro del SubViewport
 	world = WORLD_SCENE.instantiate()
@@ -55,11 +47,9 @@ func _create_style(bg: Color, border: Color = Color.TRANSPARENT, radius: int = 6
 
 
 func _setup_styles() -> void:
-	# Stats panel
 	var stats_style = _create_style(Color(0.1, 0.1, 0.14), Color(0.3, 0.3, 0.4))
 	$Sidebar/StatsPanel.add_theme_stylebox_override("panel", stats_style)
 	
-	# Decision panel
 	var decision_style = _create_style(Color(0.1, 0.1, 0.14), Color(0.3, 0.3, 0.4))
 	$Sidebar/DecisionPanel.add_theme_stylebox_override("panel", decision_style)
 
@@ -86,7 +76,10 @@ func _update_hud() -> void:
 	time_label.text = "⏱ %02d:%02d" % [minutes, seconds]
 
 
-func _input(event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
+	# Redirigir input al SubViewport para cámara/beeps
+	game_viewport.push_input(event)
+	
 	if current_state == GameState.PLAYING:
 		if event.is_action_pressed("ui_pause"):
 			_pause_game()
