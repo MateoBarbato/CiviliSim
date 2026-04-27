@@ -1,13 +1,14 @@
 extends CanvasLayer
 
-@onready var food_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/FoodLabel
-@onready var wood_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/WoodLabel
-@onready var stone_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/StoneLabel
-@onready var pop_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/PopLabel
-@onready var happiness_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/HappinessLabel
-@onready var health_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/HealthLabel
-@onready var order_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/OrderLabel
-@onready var time_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/TimeLabel
+@onready var root: Node2D = get_tree().root.get_child(0)
+@onready var food_label: Label = root.get_node("Sidebar/StatsPanel/StatsMargin/StatsVBox/FoodLabel")
+@onready var wood_label: Label = root.get_node("Sidebar/StatsPanel/StatsMargin/StatsVBox/WoodLabel")
+@onready var stone_label: Label = root.get_node("Sidebar/StatsPanel/StatsMargin/StatsVBox/StoneLabel")
+@onready var pop_label: Label = root.get_node("Sidebar/StatsPanel/StatsMargin/StatsVBox/PopLabel")
+@onready var happiness_label: Label = root.get_node("Sidebar/StatsPanel/StatsMargin/StatsVBox/HappinessLabel")
+@onready var health_label: Label = root.get_node("Sidebar/StatsPanel/StatsMargin/StatsVBox/HealthLabel")
+@onready var order_label: Label = root.get_node("Sidebar/StatsPanel/StatsMargin/StatsVBox/OrderLabel")
+@onready var time_label: Label = root.get_node("Sidebar/StatsPanel/StatsMargin/StatsVBox/TimeLabel")
 
 var hud_update_timer: float = 0.0
 const HUD_UPDATE_INTERVAL: float = 0.5

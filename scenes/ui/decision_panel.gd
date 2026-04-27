@@ -1,7 +1,7 @@
 extends Control
 
-@onready var event_label: Label = $MarginContainer/VBoxContainer/EventLabel
-@onready var options_container: VBoxContainer = $MarginContainer/VBoxContainer/OptionsContainer
+@onready var event_label: Label = $DecisionMargin/DecisionVBox/EventLabel
+@onready var options_container: VBoxContainer = $DecisionMargin/DecisionVBox/OptionsContainer
 
 var _decision_system: Node
 var current_event: Dictionary = {}
@@ -22,6 +22,10 @@ func _get_decision_system() -> Node:
 		for child in parent.get_children():
 			if child.name == "DecisionSystem":
 				return child
+			if child is SubViewport:
+				for sub_child in child.get_children():
+					if sub_child.name == "DecisionSystem":
+						return sub_child
 		parent = parent.get_parent()
 	return null
 
