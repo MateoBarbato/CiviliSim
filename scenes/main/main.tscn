@@ -23,7 +23,7 @@ stretch_mode = 1
 expand = true
 
 [node name="GameViewport" type="SubViewport" parent="SubViewportContainer"]
-size = Vector2i(1280, 720)
+size = Vector2i(1024, 720)
 
 [node name="Camera2D" type="Camera2D" parent="SubViewportContainer/GameViewport"]
 position = Vector2(1600, 1600)
