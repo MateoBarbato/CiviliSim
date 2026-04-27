@@ -19,7 +19,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 stretch = true
-stretch_mode = 2
+stretch_mode = 0
 expand = false
 
 [node name="GameViewport" type="SubViewport" parent="SubViewportContainer"]
