@@ -20,7 +20,7 @@ grow_horizontal = 2
 grow_vertical = 2
 stretch = true
 stretch_mode = 2
-expand = true
+expand = false
 
 [node name="GameViewport" type="SubViewport" parent="SubViewportContainer"]
 size = Vector2i(1600, 900)
