@@ -76,7 +76,7 @@ func _update_hud() -> void:
 	time_label.text = "⏱ %02d:%02d" % [minutes, seconds]
 
 
-func _unhandled_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	# Redirigir input al SubViewport para cámara/beeps
 	game_viewport.push_input(event)
 	
