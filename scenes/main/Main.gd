@@ -1,10 +1,11 @@
-extends Node2D
+extends Control
 
 const WORLD_SCENE = preload("res://scenes/world/world.tscn")
 
 var world: WorldScene = null
 @onready var game_viewport: SubViewport = $GameViewport
 @onready var game_view: TextureRect = $GameView
+@onready var sidebar: VBoxContainer = $Sidebar
 
 @onready var food_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/FoodLabel
 @onready var wood_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/WoodLabel
@@ -17,7 +18,6 @@ var world: WorldScene = null
 
 enum GameState { PLAYING, PAUSED, GAME_OVER, VICTORY }
 var current_state: GameState = GameState.PLAYING
-
 var hud_update_timer: float = 0.0
 
 
@@ -25,24 +25,23 @@ func _ready() -> void:
 	ColonyManager.game_over.connect(_on_game_over)
 	ColonyManager.victory.connect(_on_victory)
 	
-	# Conectar SubViewport al TextureRect
+	# SubViewport → TextureRect
 	var vp_texture = ViewportTexture.new()
 	vp_texture.viewport_path = game_viewport.get_path()
 	game_view.texture = vp_texture
 	
-	# Instanciar world dentro del SubViewport
+	# World dentro del SubViewport
 	world = WORLD_SCENE.instantiate()
 	game_viewport.add_child(world)
 	
 	# Estilos sidebar
-	_setup_sidebar_styles()
+	_setup_styles()
 	
-	# Iniciar juego con un delay breve
 	await get_tree().create_timer(0.1).timeout
 	start_game()
 
 
-func _create_style(bg: Color, border: Color = Color.TRANSPARENT, radius: int = 8) -> StyleBoxFlat:
+func _create_style(bg: Color, border: Color = Color.TRANSPARENT, radius: int = 6) -> StyleBoxFlat:
 	var s = StyleBoxFlat.new()
 	s.bg_color = bg
 	s.border_color = border
@@ -52,10 +51,14 @@ func _create_style(bg: Color, border: Color = Color.TRANSPARENT, radius: int = 8
 	return s
 
 
-func _setup_sidebar_styles() -> void:
-	$Sidebar.add_theme_stylebox_override("panel", _create_style(Color(0.08, 0.08, 0.1)))
-	$Sidebar/StatsPanel.add_theme_stylebox_override("panel", _create_style(Color(0.12, 0.12, 0.15), Color(0.25, 0.25, 0.3)))
-	$Sidebar/DecisionPanel.add_theme_stylebox_override("panel", _create_style(Color(0.12, 0.12, 0.15), Color(0.25, 0.25, 0.3)))
+func _setup_styles() -> void:
+	# Stats panel
+	var stats_style = _create_style(Color(0.1, 0.1, 0.14), Color(0.3, 0.3, 0.4))
+	$Sidebar/StatsPanel.add_theme_stylebox_override("panel", stats_style)
+	
+	# Decision panel
+	var decision_style = _create_style(Color(0.1, 0.1, 0.14), Color(0.3, 0.3, 0.4))
+	$Sidebar/DecisionPanel.add_theme_stylebox_override("panel", decision_style)
 
 
 func _process(delta: float) -> void:
@@ -107,9 +110,9 @@ func _resume_game() -> void:
 
 func _on_game_over() -> void:
 	current_state = GameState.GAME_OVER
-	print("GAME OVER - Todos los Beeps han muerto")
+	print("GAME OVER")
 
 
 func _on_victory() -> void:
 	current_state = GameState.VICTORY
-	print("VICTORIA - La colonia alcanzó %d Beeps!" % GameConfig.WIN_POPULATION)
+	print("VICTORIA")

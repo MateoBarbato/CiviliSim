@@ -1,32 +1,31 @@
-[gd_scene load_steps=7]
+[gd_scene load_steps=7 uuid="uid://cv11main"]
 
 [ext_resource type="Script" path="res://scenes/main/Main.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/systems/decision_system.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/systems/reproduction_system.gd" id="4"]
-[ext_resource type="Script" path="res://scenes/ui/decision_panel.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/systems/decision_system.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/systems/reproduction_system.gd" id="3"]
+[ext_resource type="Script" path="res://scenes/ui/decision_panel.gd" id="4"]
 
-
-[node name="Main" type="Node2D"]
+[node name="Main" type="Control"]
+layout_mode = 1
+anchors_preset = 15
 script = ExtResource("1")
 
 [node name="GameViewport" type="SubViewport" parent="."]
 size = Vector2i(1600, 900)
 transparent_bg = false
 
-[node name="World" type="Node2D" parent="GameViewport"]
-
 [node name="Camera2D" type="Camera2D" parent="GameViewport"]
 position = Vector2(1600, 1600)
 zoom = Vector2(0.5, 0.5)
 
 [node name="DecisionSystem" type="Node" parent="GameViewport"]
-script = ExtResource("3")
+script = ExtResource("2")
 
 [node name="ReproductionSystem" type="Node" parent="GameViewport"]
-script = ExtResource("4")
+script = ExtResource("3")
 
 [node name="GameView" type="TextureRect" parent="."]
-layout_mode = 3
+layout_mode = 1
 anchors_preset = 15
 anchor_left = 0.0
 anchor_top = 0.0
@@ -37,8 +36,8 @@ grow_vertical = 2
 stretch_mode = 2
 expand_mode = 1
 
-[node name="Sidebar" type="Panel" parent="."]
-layout_mode = 3
+[node name="Sidebar" type="VBoxContainer" parent="."]
+layout_mode = 1
 anchors_preset = 15
 anchor_left = 0.8
 anchor_top = 0.0
@@ -48,12 +47,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="StatsPanel" type="Panel" parent="Sidebar"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 0.25
-grow_horizontal = 2
-grow_vertical = 0
+size_flags_vertical = 3
 
 [node name="StatsMargin" type="MarginContainer" parent="Sidebar/StatsPanel"]
 layout_mode = 1
@@ -88,26 +82,22 @@ text = "🪨 0"
 text = "👥 0 / 30"
 
 [node name="HappinessLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox"]
-text = "😊 50.0"
+text = "😊 50"
 
 [node name="HealthLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox"]
-text = "❤️ 50.0"
+text = "❤️ 50"
 
 [node name="OrderLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox"]
-text = "⚖️ 50.0"
+text = "⚖️ 50"
 
 [node name="TimeLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox"]
 text = "⏱ 00:00"
 
+[node name="Separator" type="HSeparator" parent="Sidebar"]
+
 [node name="DecisionPanel" type="Panel" parent="Sidebar"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_top = 0.25
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("6")
+size_flags_vertical = 3
+script = ExtResource("4")
 
 [node name="DecisionMargin" type="MarginContainer" parent="Sidebar/DecisionPanel"]
 layout_mode = 1
@@ -126,11 +116,9 @@ layout_mode = 2
 theme_override_constants/separation = 4
 
 [node name="EventLabel" type="Label" parent="Sidebar/DecisionPanel/DecisionMargin/DecisionVBox"]
-text = "[Eventos aparecerán aquí]"
-horizontal_alignment = 1
+text = ""
+autowrap_mode = 3
 visible = false
 
 [node name="OptionsContainer" type="VBoxContainer" parent="Sidebar/DecisionPanel/DecisionMargin/DecisionVBox"]
 theme_override_constants/separation = 3
-
-
