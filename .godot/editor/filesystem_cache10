@@ -1,8 +1,9 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1777211887
+::res://::1777256897
 bugs.md::TextFile::-1::1777152054::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::8301129641987627534::1777139297::1777155392::1::::<><><>0<>0<>7a54065931d745fdd548cda62e680e33<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 README.md::TextFile::-1::1777138406::0::1::::<><><>0<>0<><>::
+::res://addons/::1777257004
 ::res://plans/::1777216718
 architecture.md::TextFile::-1::1777140615::0::1::::<><><>0<>0<><>::
 standards.md::TextFile::-1::1777148008::0::1::::<><><>0<>0<><>::
@@ -18,8 +19,8 @@ shelter.tscn::PackedScene::-1::1777146500::0::1::::<><><>0<>0<><>::res://scenes/
 ::res://scenes/camera/::1777154757
 CameraController.gd::GDScript::8575893883971381351::1777154562::0::1::::CameraController<>Camera2D<><>0<>0<><>::
 ::res://scenes/main/::1777154757
-Main.gd::GDScript::1166930322046007282::1777253168::0::1::::<>Node2D<><>0<>0<><>::
-main.tscn::PackedScene::-1::1777253242::0::1::::<><><>0<>0<><>::res://scenes/main/Main.gd<>res://scripts/systems/decision_system.gd<>res://scripts/systems/reproduction_system.gd<>res://scenes/ui/decision_panel.gd
+Main.gd::GDScript::1166930322046007282::1777255741::0::1::::<>HBoxContainer<><>0<>0<><>::
+main.tscn::PackedScene::-1::1777256155::0::1::::<><><>0<>0<><>::res://scenes/main/Main.gd<>res://scripts/systems/decision_system.gd<>res://scripts/systems/reproduction_system.gd<>res://scenes/ui/decision_panel.gd
 ::res://scenes/resources/::1777154757
 ResourceNode.gd::GDScript::13112909364720967::1777215458::0::1::::ResourceNodeScene<>Node2D<><>0<>0<><>::
 resource_node.tscn::PackedScene::-1::1777142881::0::1::::<><><>0<>0<><>::res://scenes/resources/ResourceNode.gd

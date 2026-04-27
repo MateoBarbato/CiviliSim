@@ -1,4 +1,4 @@
-extends Control
+extends Panel
 
 @onready var event_label: Label = $DecisionMargin/DecisionVBox/EventLabel
 @onready var options_container: VBoxContainer = $DecisionMargin/DecisionVBox/OptionsContainer

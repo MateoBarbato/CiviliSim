@@ -30,6 +30,9 @@ func _ready() -> void:
 	vp_texture.viewport_path = game_viewport.get_path()
 	game_view.texture = vp_texture
 	
+	# Actualizar ViewportTexture cada frame
+	game_viewport.connect("size_changed", Callable(self, "_on_viewport_size_changed"))
+	
 	# World dentro del SubViewport
 	world = WORLD_SCENE.instantiate()
 	game_viewport.add_child(world)

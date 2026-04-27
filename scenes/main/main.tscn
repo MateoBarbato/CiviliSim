@@ -27,9 +27,8 @@ script = ExtResource("3")
 layout_mode = 2
 size_flags_horizontal = 3
 ratio_flags_horizontal = 0.8
-size_flags_vertical = 3
 stretch_mode = 2
-expand_mode = 1
+expand_mode = 0
 
 [node name="Sidebar" type="VBoxContainer" parent="."]
 layout_mode = 2
@@ -38,7 +37,7 @@ ratio_flags_horizontal = 0.2
 size_flags_vertical = 3
 
 [node name="StatsPanel" type="Panel" parent="Sidebar"]
-size_flags_vertical = 3
+size_flags_vertical = 0
 
 [node name="StatsMargin" type="MarginContainer" parent="Sidebar/StatsPanel"]
 layout_mode = 2
