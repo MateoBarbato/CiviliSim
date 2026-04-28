@@ -29,6 +29,10 @@ var _stuck_timer: float = 0.0
 const STUCK_TIMEOUT: float = 2.5
 var _debug_label: Label = null
 
+## Pathfinding
+var _path: Array[Vector2] = []
+var _waypoint_index: int = 0
+
 var _reserved_resource_id: int = 0
 const MAX_BEEPS_PER_RESOURCE: int = 2
 static var _resource_reservations: Dictionary = {}
@@ -163,23 +167,50 @@ func _move_toward_target(delta: float) -> void:
 		_is_moving = false
 		velocity = Vector2.ZERO
 		stats.set_state(BeepStats.State.IDLE)
+		_path.clear()
+		_waypoint_index = 0
 		return
 
-	var direction: Vector2 = _target_position - position
-	
-	if direction.length() < 2.0:
-		_is_moving = false
-		velocity = Vector2.ZERO
-		_stuck_timer = 0.0
-		if _current_target != null and is_instance_valid(_current_target):
-			if _current_target is ResourceNodeScene:
-				if position.distance_to(_current_target.position) <= COLLECTION_RANGE:
-					collect_resource(_current_target)
-		_release_current_resource_target()
-		_current_target = null
-		stats.set_state(BeepStats.State.IDLE)
+	var waypoint: Vector2
+	if _path.is_empty():
+		waypoint = _target_position
+	else:
+		if _waypoint_index >= _path.size():
+			_is_moving = false
+			velocity = Vector2.ZERO
+			_stuck_timer = 0.0
+			if _current_target != null and is_instance_valid(_current_target):
+				if _current_target is ResourceNodeScene:
+					if position.distance_to(_current_target.position) <= COLLECTION_RANGE:
+						collect_resource(_current_target)
+			_release_current_resource_target()
+			_current_target = null
+			stats.set_state(BeepStats.State.IDLE)
+			_path.clear()
+			_waypoint_index = 0
+			return
+		waypoint = _path[_waypoint_index]
+
+	var direction: Vector2 = waypoint - position
+
+	if direction.length() < 8.0:
+		if _path.is_empty():
+			_is_moving = false
+			velocity = Vector2.ZERO
+			_stuck_timer = 0.0
+			if _current_target != null and is_instance_valid(_current_target):
+				if _current_target is ResourceNodeScene:
+					if position.distance_to(_current_target.position) <= COLLECTION_RANGE:
+						collect_resource(_current_target)
+			_release_current_resource_target()
+			_current_target = null
+			stats.set_state(BeepStats.State.IDLE)
+			_path.clear()
+			_waypoint_index = 0
+			return
+		_waypoint_index += 1
 		return
-	
+
 	velocity = direction.normalized() * move_speed
 	stats.set_state(BeepStats.State.MOVING)
 
@@ -200,6 +231,11 @@ func move_to(position: Vector2) -> void:
 	_stuck_timer = 0.0
 	stats.set_state(BeepStats.State.MOVING)
 
+	var world = _get_world()
+	if world:
+		_path = Pathfinding.simplify_path(Pathfinding.find_path(world, self.position, position))
+		_waypoint_index = 0
+
 
 func move_to_node(target_node: Node2D) -> void:
 	if target_node is ResourceNodeScene:
@@ -213,6 +249,11 @@ func move_to_node(target_node: Node2D) -> void:
 	_is_moving = true
 	_stuck_timer = 0.0
 	stats.set_state(BeepStats.State.MOVING)
+
+	var world = _get_world()
+	if world:
+		_path = Pathfinding.simplify_path(Pathfinding.find_path(world, self.position, target_node.position))
+		_waypoint_index = 0
 
 
 func collect_resource(resource_node: Node) -> void:
@@ -393,6 +434,16 @@ func _get_resource_container() -> Node2D:
 	return world.get_node_or_null("ResourceContainer")
 
 
+func _get_world() -> WorldScene:
+	var parent = get_parent()
+	if parent == null:
+		return null
+	var world = parent.get_parent()
+	if world is WorldScene:
+		return world
+	return null
+
+
 func _try_collect_adjacent_resource(resource_type = null) -> bool:
 	var resource = _find_nearest_resource_type(resource_type, COLLECTION_RANGE)
 	if resource == null:
@@ -417,6 +468,8 @@ func _check_stuck(delta: float) -> void:
 		_release_current_resource_target()
 		_current_target = null
 		_stuck_timer = 0.0
+		_path.clear()
+		_waypoint_index = 0
 		explore()
 
 

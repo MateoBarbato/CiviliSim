@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://b4x2m9k8n7p5q"]
+
+[ext_resource type="Script" path="res://scenes/ui/start_menu.gd" id="1_menu"]
+
+[node name="StartMenu" type="CanvasLayer" unique_id=89234712]
+layer = 20
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="." unique_id=45678901]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.03, 0.03, 0.05, 1)
+
+[node name="Panel" type="Panel" parent="." unique_id=23456789]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -160.0
+offset_right = 200.0
+offset_bottom = 160.0
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel" unique_id=34567890]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel/MarginContainer" unique_id=56789012]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="Panel/MarginContainer/VBox" unique_id=67890123]
+layout_mode = 2
+text = "CIVILISIM"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="Panel/MarginContainer/VBox" unique_id=78901234]
+layout_mode = 2
+text = "Simulador de Colonia"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="Panel/MarginContainer/VBox" unique_id=89012345]
+layout_mode = 2
+
+[node name="StartButton" type="Button" parent="Panel/MarginContainer/VBox" unique_id=90123456]
+layout_mode = 2
+text = "Iniciar Colonia"
+
+[node name="ControlsLabel" type="Label" parent="Panel/MarginContainer/VBox" unique_id=12345670]
+layout_mode = 2
+autowrap_mode = 3
+text = "WASD: Cámara  |  Scroll: Zoom  |  P: Pausa  |  F1: Debug"

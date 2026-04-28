@@ -42,10 +42,12 @@ const DECISION_INTERVAL: float = 45.0
 const DECISION_RESPONSE_TIME: float = 35.0
 
 # --- Construcción ---
-const SHELTER_COST_WOOD: float = 15.0
-const SHELTER_COST_STONE: float = 5.0
-const SHELTER_CAPACITY: int = 8
-const SHELTER_HEAL_RATE: float = 1.5
+# NOTA: SHELTER_COST_*, SHELTER_CAPACITY y SHELTER_HEAL_RATE se definen en
+# BuildingType.DATA[BuildingType.Type.SHELTER] como fuente única de verdad.
+const SHELTER_COST_WOOD: float = 15.0  # alias = BuildingType.DATA[Type.SHELTER].cost_wood
+const SHELTER_COST_STONE: float = 5.0  # alias = BuildingType.DATA[Type.SHELTER].cost_stone
+const SHELTER_CAPACITY: int = 10  # alias = BuildingType.DATA[Type.SHELTER].capacity
+const SHELTER_HEAL_RATE: float = 1.0  # alias = BuildingType.DATA[Type.SHELTER].heals_per_second
 
 # --- Condición de victoria/derrota ---
 const WIN_POPULATION: int = 15

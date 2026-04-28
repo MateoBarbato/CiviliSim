@@ -1,8 +1,13 @@
 extends Control
 
 const WORLD_SCENE = preload("res://scenes/world/world.tscn")
+const GAME_END_OVERLAY = preload("res://scenes/ui/game_end_overlay.tscn")
+const START_MENU = preload("res://scenes/ui/start_menu.tscn")
 
 var world: WorldScene = null
+var game_end_overlay: CanvasLayer = null
+var start_menu: CanvasLayer = null
+var game_started: bool = false
 @onready var game_viewport: SubViewport = $SubViewportContainer/GameViewport
 @onready var camera: Camera2D = $SubViewportContainer/GameViewport/Camera2D
 @onready var reproduction_system: ReproductionSystem = $SubViewportContainer/GameViewport/ReproductionSystem
@@ -18,8 +23,8 @@ var world: WorldScene = null
 @onready var beep_states_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/BeepStatesLabel
 @onready var fertility_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/FertilityLabel
 
-enum GameState { PLAYING, PAUSED, GAME_OVER, VICTORY }
-var current_state: GameState = GameState.PLAYING
+enum GameState { MENU, PLAYING, PAUSED, GAME_OVER, VICTORY }
+var current_state: GameState = GameState.MENU
 var hud_update_timer: float = 0.0
 
 
@@ -33,16 +38,22 @@ func _ready() -> void:
 		GameConfig.WORLD_HEIGHT * GameConfig.TILE_SIZE
 	) / 2.0
 	camera.position = world_center
-	
+
 	# World dentro del SubViewport
 	world = WORLD_SCENE.instantiate()
 	game_viewport.add_child(world)
-	
+
+	# Game end overlay
+	game_end_overlay = GAME_END_OVERLAY.instantiate()
+	add_child(game_end_overlay)
+
+	# Start menu
+	start_menu = START_MENU.instantiate()
+	start_menu.start_requested.connect(_on_start_menu_pressed)
+	add_child(start_menu)
+
 	# Estilos sidebar
 	_setup_styles()
-	
-	await get_tree().create_timer(0.1).timeout
-	start_game()
 
 
 func _create_style(bg: Color, border: Color = Color.TRANSPARENT, radius: int = 6) -> StyleBoxFlat:
@@ -71,6 +82,8 @@ func _process(delta: float) -> void:
 
 
 func _update_hud() -> void:
+	if not game_started:
+		return
 	var state = ResourceManager.get_resource_state()
 	food_label.text = "🍖 %d" % int(state["food"])
 	wood_label.text = "🪵 %d" % int(state["wood"])
@@ -106,6 +119,10 @@ func _update_hud() -> void:
 	fertility_label.text = "💞 %d%%" % fertility_pct
 
 
+func _on_start_menu_pressed() -> void:
+	start_game()
+
+
 func _input(event: InputEvent) -> void:
 	# Redirigir input al SubViewport para cámara/beeps
 	game_viewport.push_input(event)
@@ -120,6 +137,7 @@ func _input(event: InputEvent) -> void:
 
 func start_game() -> void:
 	current_state = GameState.PLAYING
+	game_started = true
 	ColonyManager.start_game()
 	world.initialize_beeps()
 
@@ -136,9 +154,13 @@ func _resume_game() -> void:
 
 func _on_game_over() -> void:
 	current_state = GameState.GAME_OVER
-	print("GAME OVER")
+	get_tree().paused = true
+	if game_end_overlay and game_end_overlay.has_method("show_game_over"):
+		game_end_overlay.show_game_over()
 
 
 func _on_victory() -> void:
 	current_state = GameState.VICTORY
-	print("VICTORIA")
+	get_tree().paused = true
+	if game_end_overlay and game_end_overlay.has_method("show_victory"):
+		game_end_overlay.show_victory()

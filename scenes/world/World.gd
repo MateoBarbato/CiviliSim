@@ -8,11 +8,11 @@ extends Node2D
 
 const BEEP_SCENE: PackedScene = preload("res://scenes/beep/beep.tscn")
 const RESOURCE_SCENE: PackedScene = preload("res://scenes/resources/resource_node.tscn")
+const _TerrainTilesetGenerator = preload("res://scenes/world/_terrain_tileset_generator.gd")
 
 var world_width: int = GameConfig.WORLD_WIDTH
 var world_height: int = GameConfig.WORLD_HEIGHT
 
-const INITIAL_RESOURCE_COUNT: int = 30
 var _spawn_timer: float = 0.0
 
 enum Terrain {
@@ -26,7 +26,8 @@ enum Terrain {
 var terrain_stats: Dictionary = {}
 var _terrain_map: Dictionary = {}
 
-var _terrain_colors: Dictionary = {
+## Colores de terreno (fuente de verdad compartida con _terrain_tileset_generator)
+const TERRAIN_COLORS: Dictionary = {
 	Terrain.GRASS: Color(0.3, 0.7, 0.3),
 	Terrain.WATER: Color(0.2, 0.4, 0.8),
 	Terrain.MOUNTAIN: Color(0.5, 0.5, 0.5),
@@ -86,25 +87,33 @@ func _generate_terrain() -> void:
 
 
 func _create_terrain_visuals() -> void:
-	var img = Image.create(world_width * GameConfig.TILE_SIZE, world_height * GameConfig.TILE_SIZE, false, Image.FORMAT_RGBA8)
-	img.fill(Color(0.05, 0.05, 0.05, 1))
+	var atlas_img = _TerrainTilesetGenerator.create_terrain_atlas()
+	var atlas_tex = ImageTexture.create_from_image(atlas_img)
 
+	# Configurar TileSet
+	var tileset = TileSet.new()
+	tileset.tile_size = Vector2i(GameConfig.TILE_SIZE, GameConfig.TILE_SIZE)
+
+	# Crear AtlasSource
+	var source = TileSetAtlasSource.new()
+	source.texture = atlas_tex
+	source.texture_region_size = Vector2i(GameConfig.TILE_SIZE, GameConfig.TILE_SIZE)
+
+	# Registrar tiles (5 tipos de terreno)
+	for i in range(5):
+		source.create_tile(Vector2i(i, 0))
+
+	tileset.add_source(source, 0)
+
+	# Asignar al TileMap
+	tile_map.tile_set = tileset
+	tile_map.z_index = -1
+
+	# Pintar terreno
 	for x in range(world_width):
 		for y in range(world_height):
 			var terrain: int = _terrain_map.get(Vector2i(x, y), Terrain.GRASS)
-			var color: Color = _terrain_colors.get(terrain, Color.WHITE)
-			var px: int = x * GameConfig.TILE_SIZE
-			var py: int = y * GameConfig.TILE_SIZE
-			for dx in range(GameConfig.TILE_SIZE):
-				for dy in range(GameConfig.TILE_SIZE):
-					img.set_pixel(px + dx, py + dy, color)
-
-	var texture = ImageTexture.create_from_image(img)
-	var sprite = Sprite2D.new()
-	sprite.texture = texture
-	sprite.position = Vector2(world_width * GameConfig.TILE_SIZE, world_height * GameConfig.TILE_SIZE) / 2
-	sprite.z_index = -1
-	add_child(sprite)
+			tile_map.set_cell(0, Vector2i(x, y), 0, Vector2i(terrain, 0))
 
 
 func _process(delta: float) -> void:
@@ -126,7 +135,7 @@ func initialize_beeps() -> void:
 
 
 func _spawn_initial_resources() -> void:
-	var resources = spawn_manager.spawn_resources(INITIAL_RESOURCE_COUNT, resource_container)
+	var resources = spawn_manager.spawn_resources(GameConfig.INITIAL_RESOURCE_COUNT, resource_container)
 	for resource in resources:
 		_connect_resource_signals(resource)
 

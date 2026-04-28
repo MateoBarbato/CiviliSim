@@ -1,10 +1,14 @@
 extends Panel
 
+## NOTE: This script is attached inline in Main.tscn, NOT from decision_panel.tscn.
+## The node tree in Main.tscn is: DecisionPanel -> DecisionMargin/DecisionVBox/EventLabel, OptionsContainer, ChatScroll/ChatLog
 @onready var event_label: Label = $DecisionMargin/DecisionVBox/EventLabel
 @onready var options_container: VBoxContainer = $DecisionMargin/DecisionVBox/OptionsContainer
 @onready var chat_log: RichTextLabel = $DecisionMargin/DecisionVBox/ChatScroll/ChatLog
 
 var _decision_system: Node
+var _chat_messages: Array[String] = []
+const MAX_CHAT_LINES: int = 50
 var current_event: Dictionary = {}
 var panel_visible_state: bool = false
 var _bind_retry_timer: float = 0.0
