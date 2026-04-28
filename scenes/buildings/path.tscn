@@ -1,0 +1,12 @@
+[gd_scene load_steps=2]
+
+[ext_resource type="Script" path="res://scenes/buildings/Path.gd" id="1"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_path"]
+size = Vector2(48.0, 16.0)
+
+[node name="Path" type="Node2D"]
+script = ExtResource("1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_path")

@@ -9,7 +9,7 @@ const WORLD_HEIGHT: int = 300
 const TILE_SIZE: int = 16
 
 # --- Beeps iniciales ---
-const INITIAL_BEEP_COUNT: int = 4
+const INITIAL_BEEP_COUNT: int = 6
 
 # --- Recursos iniciales ---
 const INITIAL_FOOD: float = 50.0
@@ -40,6 +40,20 @@ const REPRODUCTION_COOLDOWN: float = 90.0
 # --- Decisiones ---
 const DECISION_INTERVAL: float = 45.0
 const DECISION_RESPONSE_TIME: float = 35.0
+
+# --- Event Depth ---
+## Multiplicador de dificultad por cada fase (early/mid/late)
+const EVENT_DIFFICULTY_EARLY: float = 1.0
+const EVENT_DIFFICULTY_MID: float = 1.3
+const EVENT_DIFFICULTY_LATE: float = 1.7
+## Tiempo en segundos para transición entre fases
+const EVENT_PHASE_MID_TIME: float = 180.0   # 3 min → fase media
+const EVENT_PHASE_LATE_TIME: float = 420.0  # 7 min → fase tardía
+## Efectos persistentes
+const PERSISTENT_EFFECT_MAX_ACTIVE: int = 5
+## Invasión
+const INVASION_MIN_INTERVAL: float = 120.0   # primera invasión posible a 2 min
+const INVASION_COOLDOWN: float = 180.0       # entre invasiones
 
 # --- Construcción ---
 # NOTA: SHELTER_COST_*, SHELTER_CAPACITY y SHELTER_HEAL_RATE se definen en

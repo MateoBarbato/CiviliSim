@@ -27,14 +27,13 @@ stretch = true
 
 [node name="GameViewport" type="SubViewport" parent="SubViewportContainer" unique_id=1465572769]
 handle_input_locally = false
-size = Vector2i(2, 2)
+size = Vector2i(960, 720)
 size_2d_override_stretch = true
-render_target_update_mode = 3
+render_target_update_mode = 0
 
 [node name="Camera2D" type="Camera2D" parent="SubViewportContainer/GameViewport" unique_id=47413680]
 position = Vector2(1600, 1600)
 zoom = Vector2(0.5, 0.5)
-enabled = true
 script = ExtResource("5")
 
 [node name="DecisionSystem" type="Node" parent="SubViewportContainer/GameViewport" unique_id=253875393]
@@ -45,22 +44,18 @@ script = ExtResource("3")
 
 [node name="Sidebar" type="VBoxContainer" parent="." unique_id=56595181]
 layout_mode = 1
-anchors_preset = 15
+anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
-anchor_top = 0.0
 anchor_bottom = 1.0
 offset_left = -320.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="StatsPanel" type="Panel" parent="Sidebar" unique_id=599873694]
+custom_minimum_size = Vector2(0, 190)
 layout_mode = 2
 size_flags_vertical = 0
-custom_minimum_size = Vector2(0, 220)
 
 [node name="StatsMargin" type="MarginContainer" parent="Sidebar/StatsPanel" unique_id=1749233636]
 layout_mode = 1
@@ -74,63 +69,87 @@ offset_bottom = -8.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="StatsVBox" type="VBoxContainer" parent="Sidebar/StatsPanel/StatsMargin" unique_id=1890058640]
+[node name="StatsGrid" type="GridContainer" parent="Sidebar/StatsPanel/StatsMargin" unique_id=1890058640]
 layout_mode = 2
-theme_override_constants/separation = 4
+columns = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 2
 
-[node name="TitleLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=473647118]
+[node name="TitleLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=473647118]
 layout_mode = 2
 text = "COLONIA"
 horizontal_alignment = 1
+size_flags_horizontal = 3
 
-[node name="FoodLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=1236968459]
-layout_mode = 2
-text = "🍖 0"
-
-[node name="WoodLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=91831783]
-layout_mode = 2
-text = "🪵 0"
-
-[node name="StoneLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=1647332358]
-layout_mode = 2
-text = "🪨 0"
-
-[node name="PopLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=1785336832]
-layout_mode = 2
-text = "👥 0 / 30"
-
-[node name="HappinessLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=831320517]
-layout_mode = 2
-text = "😊 50"
-
-[node name="HealthLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=1223133321]
-layout_mode = 2
-text = "❤️ 50"
-
-[node name="OrderLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=1515870434]
-layout_mode = 2
-text = "⚖️ 50"
-
-[node name="TimeLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=434229809]
+[node name="TimeLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=434229809]
 layout_mode = 2
 text = "⏱ 00:00"
+size_flags_horizontal = 3
 
-[node name="BeepStatesLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=206448991]
+[node name="FoodLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=1236968459]
 layout_mode = 2
-autowrap_mode = 3
-text = "🤖 C:0 M:0 R:0"
+text = "🍖 0"
+size_flags_horizontal = 3
 
-[node name="FertilityLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsVBox" unique_id=94127463]
+[node name="WoodLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=91831783]
+layout_mode = 2
+text = "🪵 0"
+size_flags_horizontal = 3
+
+[node name="StoneLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=1647332358]
+layout_mode = 2
+text = "🪨 0"
+size_flags_horizontal = 3
+
+[node name="PopLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=1785332358]
+layout_mode = 2
+text = "👥 0 / 30"
+size_flags_horizontal = 3
+
+[node name="HappinessLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=831320517]
+layout_mode = 2
+text = "😊 50"
+size_flags_horizontal = 3
+
+[node name="HealthLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=1223133321]
+layout_mode = 2
+text = "❤️ 50"
+size_flags_horizontal = 3
+
+[node name="OrderLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=1515870434]
+layout_mode = 2
+text = "⚖️ 50"
+size_flags_horizontal = 3
+
+[node name="BeepStatesLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=206448991]
+layout_mode = 2
+text = "🤖 C:0 M:0 R:0"
+size_flags_horizontal = 3
+
+[node name="FertilityLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=94127463]
 layout_mode = 2
 text = "💞 0%"
+size_flags_horizontal = 3
+
+[node name="ConstructionLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=385920174]
+visible = false
+layout_mode = 2
+text = "🔨 Refugio: 0%"
+size_flags_horizontal = 3
+
+[node name="ExplorationLabel" type="Label" parent="Sidebar/StatsPanel/StatsMargin/StatsGrid" unique_id=592847103]
+layout_mode = 2
+text = "🗺️ 0%"
+size_flags_horizontal = 3
 
 [node name="Separator" type="HSeparator" parent="Sidebar" unique_id=62944463]
 layout_mode = 2
 
 [node name="DecisionPanel" type="Panel" parent="Sidebar" unique_id=556693317]
+clip_contents = true
 layout_mode = 2
 size_flags_vertical = 3
-clip_contents = true
 script = ExtResource("4")
 
 [node name="DecisionMargin" type="MarginContainer" parent="Sidebar/DecisionPanel" unique_id=319945256]
@@ -160,16 +179,16 @@ size_flags_vertical = 0
 theme_override_constants/separation = 3
 
 [node name="ChatScroll" type="ScrollContainer" parent="Sidebar/DecisionPanel/DecisionMargin/DecisionVBox" unique_id=738291047]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-custom_minimum_size = Vector2(0, 80)
 
 [node name="ChatLog" type="RichTextLabel" parent="Sidebar/DecisionPanel/DecisionMargin/DecisionVBox/ChatScroll" unique_id=482736159]
+custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-autowrap_mode = 2
-custom_minimum_size = Vector2(0, 80)
 theme_override_colors/default_color = Color(0.85, 0.85, 0.9, 1)
 bbcode_enabled = true
+autowrap_mode = 2

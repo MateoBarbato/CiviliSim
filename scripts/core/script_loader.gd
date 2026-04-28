@@ -35,6 +35,7 @@ func _register_input_actions() -> void:
 	# UI actions
 	_add_action_if_missing(input_map, "ui_pause")
 	_add_action_if_missing(input_map, "ui_debug")
+	_add_action_if_missing(input_map, "ui_fog_toggle")
 	
 	# Camera zoom: mouse wheel
 	var zoom_in = InputEventMouseButton.new()
@@ -105,6 +106,12 @@ func _register_input_actions() -> void:
 	key_f1.physical_keycode = KEY_F1
 	key_f1.pressed = true
 	input_map.action_add_event("ui_debug", key_f1)
+	
+	# Fog toggle: F
+	var key_f = InputEventKey.new()
+	key_f.physical_keycode = KEY_F
+	key_f.pressed = true
+	input_map.action_add_event("ui_fog_toggle", key_f)
 
 
 static func _add_action_if_missing(input_map: InputMap, action_name: String) -> void:

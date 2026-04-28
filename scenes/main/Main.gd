@@ -12,16 +12,18 @@ var game_started: bool = false
 @onready var camera: Camera2D = $SubViewportContainer/GameViewport/Camera2D
 @onready var reproduction_system: ReproductionSystem = $SubViewportContainer/GameViewport/ReproductionSystem
 
-@onready var food_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/FoodLabel
-@onready var wood_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/WoodLabel
-@onready var stone_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/StoneLabel
-@onready var pop_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/PopLabel
-@onready var happiness_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/HappinessLabel
-@onready var health_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/HealthLabel
-@onready var order_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/OrderLabel
-@onready var time_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/TimeLabel
-@onready var beep_states_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/BeepStatesLabel
-@onready var fertility_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsVBox/FertilityLabel
+@onready var food_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/FoodLabel
+@onready var wood_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/WoodLabel
+@onready var stone_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/StoneLabel
+@onready var pop_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/PopLabel
+@onready var happiness_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/HappinessLabel
+@onready var health_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/HealthLabel
+@onready var order_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/OrderLabel
+@onready var time_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/TimeLabel
+@onready var beep_states_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/BeepStatesLabel
+@onready var fertility_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/FertilityLabel
+@onready var construction_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/ConstructionLabel
+@onready var exploration_label: Label = $Sidebar/StatsPanel/StatsMargin/StatsGrid/ExplorationLabel
 
 enum GameState { MENU, PLAYING, PAUSED, GAME_OVER, VICTORY }
 var current_state: GameState = GameState.MENU
@@ -31,6 +33,14 @@ var hud_update_timer: float = 0.0
 func _ready() -> void:
 	ColonyManager.game_over.connect(_on_game_over)
 	ColonyManager.victory.connect(_on_victory)
+
+	# Fondo negro para la niebla de guerra (area fuera del mapa)
+	var bg_rect = ColorRect.new()
+	bg_rect.color = Color(0.05, 0.05, 0.08, 1.0)
+	bg_rect.size = game_viewport.size
+	bg_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg_rect.name = "FogBackground"
+	game_viewport.add_child(bg_rect)
 
 	# Centrar cámara según tamaño de mundo configurado
 	var world_center := Vector2(
@@ -118,6 +128,20 @@ func _update_hud() -> void:
 		fertility_pct = int(reproduction_system.get_statistics().get("fertility_progress", 0.0))
 	fertility_label.text = "💞 %d%%" % fertility_pct
 
+	# Construction status
+	if ConstructionManager.is_construction_active():
+		var prog: float = ConstructionManager.get_progress()
+		var type_name: String = ConstructionManager.get_pending_type().capitalize()
+		var workers: int = ConstructionManager.assigned_workers.size()
+		construction_label.visible = true
+		construction_label.text = "🔨 %s: %.0f%% (%d🔨)" % [type_name, prog * 100.0, workers]
+	else:
+		construction_label.visible = false
+
+	# Exploration progress
+	var explored_pct := int(FogOfWar.get_exploration_percentage() * 100.0)
+	exploration_label.text = "🗺️ %d%%" % explored_pct
+
 
 func _on_start_menu_pressed() -> void:
 	start_game()
@@ -126,7 +150,12 @@ func _on_start_menu_pressed() -> void:
 func _input(event: InputEvent) -> void:
 	# Redirigir input al SubViewport para cámara/beeps
 	game_viewport.push_input(event)
-	
+
+	# Fog toggle (global, siempre disponible)
+	if event.is_action_pressed("ui_fog_toggle"):
+		if world:
+			world._toggle_fog()
+
 	if current_state == GameState.PLAYING:
 		if event.is_action_pressed("ui_pause"):
 			_pause_game()

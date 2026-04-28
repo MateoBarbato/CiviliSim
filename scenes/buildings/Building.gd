@@ -20,13 +20,17 @@ var construction_time: float = 5.0
 var capacity: int = 10
 var current_occupants: int = 0
 
-## Referencias visuales
-@onready var sprite: Sprite2D = $Sprite2D
-@onready var progress_bar: ProgressBar = $ProgressBar
-@onready var collision_shape: CollisionShape2D = $CollisionShape2D
+## Referencias visuales (pueden ser null en Path)
+var sprite: Sprite2D = null
+var progress_bar: ProgressBar = null
+var collision_shape: CollisionShape2D = null
 
 
 func _ready() -> void:
+	sprite = get_node_or_null("Sprite2D") as Sprite2D
+	progress_bar = get_node_or_null("ProgressBar") as ProgressBar
+	collision_shape = get_node_or_null("CollisionShape2D") as CollisionShape2D
+
 	ColonyManager.register_building(self)
 	_update_visuals()
 

@@ -4,8 +4,10 @@
 class_name BeepAgent
 extends CharacterBody2D
 
-## Escena del refugio (pre-cargada)
-const SHELTER_SCENE: PackedScene = preload("res://scenes/buildings/shelter.tscn")
+## Constructor activo
+var _is_constructing: bool = false
+var _construction_work_timer: float = 0.0
+const CONSTRUCTION_WORK_TIME: float = 1.5  # segundos por tick de trabajo
 
 ## Referencias
 @onready var stats: BeepStats = $BeepStats
@@ -47,6 +49,18 @@ const COLLECTION_RANGE: float = 20.0
 const NEARBY_SEARCH_RADIUS: float = 220.0
 const EXTENDED_SEARCH_RADIUS: float = 700.0
 
+## Refugio actual (null si no está dentro)
+var _shelter: ShelterBuilding = null
+
+## Umbrales para entrar/salir de refugio
+const HEALTH_THRESHOLD_ENTER: float = 60.0  # Entra si health < 60%
+const HEALTH_THRESHOLD_LEAVE: float = 80.0  # Sale si health > 80%
+const ENERGY_THRESHOLD_LEAVE: float = 70.0  # Y energy > 70%
+
+## Descanso preventivo: si lleva mucho tiempo sin descansar, ir al shelter
+var _time_since_rest: float = 0.0
+const MAX_TIME_WITHOUT_REST: float = 20.0  # segundos
+
 ## AI decision loop
 var _decision_timer: float = 0.0
 const DECISION_INTERVAL: float = 0.5
@@ -58,6 +72,7 @@ func _draw() -> void:
 
 func _ready() -> void:
 	ColonyManager.register_beep(self)
+	FogOfWar.register_beep(self)
 	stats.beep_died.connect(_on_beep_died)
 	stats.state_changed.connect(_on_state_changed)
 	_last_position = position
@@ -77,6 +92,10 @@ func _physics_process(delta: float) -> void:
 	if _action_cooldown > 0:
 		_action_cooldown -= delta
 
+	# Track time since last rest (only when outside shelter)
+	if _shelter == null:
+		_time_since_rest += delta
+
 	if _is_moving:
 		_move_toward_target(delta)
 		_check_stuck(delta)
@@ -93,8 +112,24 @@ func _decide_action() -> void:
 	if _is_moving:
 		return
 
+	# Si está dentro de un refugio, solo decidir si salir o quedarse
+	if _shelter != null:
+		_try_leave_shelter()
+		return
+
+	# Descanso preventivo: si lleva mucho tiempo sin descansar, ir al shelter
+	if _time_since_rest >= MAX_TIME_WITHOUT_REST:
+		# Si es worker, desasignar para poder descansar
+		if ConstructionManager.assigned_workers.has(self):
+			ConstructionManager.unassign_worker(self)
+		rest()
+		return
+
 	# Si está agotado, priorizar descanso para evitar quedarse "clavado" trabajando
 	if stats.energy < GameConfig.ENERGY_THRESHOLD_REST:
+		# Si es worker, desasignar para poder descansar
+		if ConstructionManager.assigned_workers.has(self):
+			ConstructionManager.unassign_worker(self)
 		rest()
 		return
 
@@ -106,23 +141,66 @@ func _decide_action() -> void:
 		seek_food()
 		return
 
-	var food_low := ResourceManager.get_food() < 15.0
-	var wood_low := ResourceManager.get_wood() < 40.0
-	var stone_low := ResourceManager.get_stone() < 30.0
+	# Si la salud está baja, buscar refugio para curarse
+	if stats.health < HEALTH_THRESHOLD_ENTER:
+		_seek_and_enter_shelter()
+		return
 
-	# Solo recolectar si realmente hace falta algo
-	if food_low:
+	var food := ResourceManager.get_food()
+	var wood := ResourceManager.get_wood()
+	var stone := ResourceManager.get_stone()
+
+	# Recursos críticos — asignar recolección prioritaria
+	var food_critical := food < 20.0
+	var wood_critical := wood < 20.0
+	var stone_critical := stone < 15.0
+
+	# Si algún recurso es crítico, recolectar ese específico
+	if wood_critical and randf() < 0.4:
+		collect_nearby_resource(ResourceType.Type.WOOD)
+		return
+	if stone_critical and randf() < 0.4:
+		collect_nearby_resource(ResourceType.Type.STONE)
+		return
+	if food_critical and randf() < 0.4:
 		seek_food()
 		return
 
-	if wood_low or stone_low:
-		collect_nearby_resource(_priority_resource_type())
+	# Si este beep es worker pero necesita descansar, dejar construcción temporalmente
+	if ConstructionManager.assigned_workers.has(self):
+		return  # Continuar construyendo
+
+	# Verificar si la colonia debería construir un refugio
+	if ConstructionManager.should_start_construction() and randf() < 0.15:
+		ConstructionManager.start_shelter_construction()
+		join_construction()
 		return
 
-	# Si no hay necesidad inmediata, explorar/vagar para descubrir nuevas zonas
-	if randf() < 0.25:
-		collect_nearby_resource(_priority_resource_type())
-	elif randf() < 0.5:
+	# Verificar si la colonia debería construir un camino (más común que refugios)
+	if ConstructionManager.should_start_path_construction() and randf() < 0.25:
+		ConstructionManager.start_path_construction()
+		join_construction()
+		return
+
+	# Si hay una construcción activa y este beep no está asignado, unirse como worker
+	if ConstructionManager.is_construction_active() and not ConstructionManager.assigned_workers.has(self):
+		join_construction()
+		return
+
+	# Si este beep ya es worker, verificar si debe continuar construyendo
+	if ConstructionManager.assigned_workers.has(self):
+		join_construction()
+		return
+
+	# Distribución equilibrada: algunos buscan comida, otros madera/piedra, otros exploran
+	var roll: float = randf()
+	if roll < 0.3:
+		seek_food()
+	elif roll < 0.5:
+		collect_nearby_resource(ResourceType.Type.WOOD)
+	elif roll < 0.65:
+		collect_nearby_resource(ResourceType.Type.STONE)
+	elif roll < 0.85:
 		explore()
 	else:
 		wander()
@@ -160,6 +238,26 @@ func collect_nearby_resource(resource_type = null) -> void:
 		explore()
 
 
+## Manejar llegada al destino (factoriza lógica duplicada)
+func _handle_arrival_at_target() -> void:
+	_release_current_resource_target()
+	_current_target = null
+
+	# Si la tarea es construir y hay construcción activa, empezar a trabajar
+	if stats.assigned_task == "building" and ConstructionManager.is_construction_active():
+		_work_on_construction()
+		return
+
+	# Si la tarea es buscar refugio, intentar entrar
+	if stats.assigned_task == "seeking_shelter":
+		var shelter = _find_nearest_shelter()
+		if shelter and shelter.has_space():
+			enter_shelter(shelter)
+			return
+
+	stats.set_state(BeepStats.State.IDLE)
+
+
 func _move_toward_target(delta: float) -> void:
 	if _current_target != null and not is_instance_valid(_current_target):
 		_release_current_resource_target()
@@ -179,13 +277,7 @@ func _move_toward_target(delta: float) -> void:
 			_is_moving = false
 			velocity = Vector2.ZERO
 			_stuck_timer = 0.0
-			if _current_target != null and is_instance_valid(_current_target):
-				if _current_target is ResourceNodeScene:
-					if position.distance_to(_current_target.position) <= COLLECTION_RANGE:
-						collect_resource(_current_target)
-			_release_current_resource_target()
-			_current_target = null
-			stats.set_state(BeepStats.State.IDLE)
+			_handle_arrival_at_target()
 			_path.clear()
 			_waypoint_index = 0
 			return
@@ -198,13 +290,7 @@ func _move_toward_target(delta: float) -> void:
 			_is_moving = false
 			velocity = Vector2.ZERO
 			_stuck_timer = 0.0
-			if _current_target != null and is_instance_valid(_current_target):
-				if _current_target is ResourceNodeScene:
-					if position.distance_to(_current_target.position) <= COLLECTION_RANGE:
-						collect_resource(_current_target)
-			_release_current_resource_target()
-			_current_target = null
-			stats.set_state(BeepStats.State.IDLE)
+			_handle_arrival_at_target()
 			_path.clear()
 			_waypoint_index = 0
 			return
@@ -285,29 +371,26 @@ func eat() -> void:
 
 
 func rest() -> void:
+	_time_since_rest = 0.0
 	var shelter = _find_nearest_shelter()
 	if shelter and shelter.has_space():
-		enter_shelter(shelter)
+		move_to_node(shelter)
+		stats.assigned_task = "seeking_shelter"
 	else:
 		stats.set_state(BeepStats.State.RESTING)
+		stats.assigned_task = "resting"
 
-
-func rest_in_shelter(shelter: ShelterBuilding) -> void:
-	if shelter.enter_beep(self):
-		stats.set_state(BeepStats.State.RESTING)
-		stats.assigned_task = "resting_in_shelter"
 
 
 func _on_beep_died() -> void:
 	_release_current_resource_target()
 	# Clean up shelter occupants
-	for building in ColonyManager.buildings:
-		if building is ShelterBuilding:
-			var shelter = building as ShelterBuilding
-			if shelter and shelter.occupants.has(self):
-				shelter.exit_beep(self)
-	
+	if _shelter and is_instance_valid(_shelter):
+		_shelter.exit_beep(self)
+		_shelter = null
+
 	ColonyManager.unregister_beep(self)
+	FogOfWar.unregister_beep(self)
 	queue_free()
 
 
@@ -319,6 +402,10 @@ func _on_state_changed(new_state: String) -> void:
 func _update_animation(state: String) -> void:
 	if animated_sprite:
 		animated_sprite.play(state)
+
+
+func is_alive() -> bool:
+	return stats.is_alive()
 
 
 func get_health() -> float:
@@ -357,26 +444,115 @@ func seek_food() -> void:
 		explore()
 
 
-func build_nearby() -> void:
-	if not ResourceManager.has_enough_for_shelter():
+## Unirse a la construcción activa
+func join_construction() -> void:
+	if not ConstructionManager.is_construction_active():
 		return
-	
+
+	# Si no estoy asignado aún, asignarme
+	if not ConstructionManager.assigned_workers.has(self):
+		if not ConstructionManager.assign_worker(self):
+			return
+
 	stats.set_state(BeepStats.State.WORKING)
 	stats.assigned_task = "building"
-	
-	var build_pos = _get_build_position()
-	_build_shelter(build_pos)
-	
-	_action_cooldown = 2.0
-	stats.set_state(BeepStats.State.IDLE)
+
+	var build_pos: Vector2 = ConstructionManager.get_build_position()
+
+	# Si ya estoy cerca, trabajar en el sitio
+	if position.distance_to(build_pos) <= COLLECTION_RANGE * 2:
+		_work_on_construction()
+		return
+
+	# Moverse al sitio de construcción
+	_current_target = null
+	_release_current_resource_target()
+	_target_position = build_pos
+	_is_moving = true
+	_stuck_timer = 0.0
+	stats.set_state(BeepStats.State.MOVING)
+
+	var world = _get_world()
+	if world:
+		_path = Pathfinding.simplify_path(Pathfinding.find_path(world, self.position, build_pos))
+		_waypoint_index = 0
+
+
+## Trabajar en el sitio de construcción (permanecer ahí y contribuir)
+func _work_on_construction() -> void:
+	if not ConstructionManager.is_construction_active():
+		ConstructionManager.unassign_worker(self)
+		stats.set_state(BeepStats.State.IDLE)
+		stats.assigned_task = "idle"
+		return
+
+	stats.set_state(BeepStats.State.WORKING)
+	stats.assigned_task = "building"
+
+	# Contribuir con el trabajo (el progreso real se calcula en ConstructionManager)
+	_action_cooldown = CONSTRUCTION_WORK_TIME
+	await get_tree().create_timer(CONSTRUCTION_WORK_TIME).timeout
+
+	if ConstructionManager.is_construction_active():
+		_work_on_construction()
+	else:
+		ConstructionManager.unassign_worker(self)
+		stats.set_state(BeepStats.State.IDLE)
+		stats.assigned_task = "idle"
 
 
 func explore() -> void:
+	# Si la prioridad es exploración, buscar tiles desconocidos
+	if ColonyManager.colony_priority == ColonyManager.ColonyPriority.EXPLORATION:
+		var unknown_tile = _find_unknown_tile_edge()
+		if unknown_tile != null:
+			var target_pos = unknown_tile * GameConfig.TILE_SIZE + Vector2(8, 8)
+			move_to(target_pos)
+			stats.assigned_task = "exploring"
+			return
+
 	var angle = randf() * TAU
 	var distance = 100.0 + randf() * 200.0
 	var target = position + Vector2.from_angle(angle) * distance
 	move_to(target)
 	stats.assigned_task = "exploring"
+
+
+## Buscar un tile UNKNOWN en el borde del area explorada
+func _find_unknown_tile_edge() -> Variant:
+	var current_tile := Vector2i(position.x / GameConfig.TILE_SIZE, position.y / GameConfig.TILE_SIZE)
+	var search_radius := 15  # tiles
+
+	# Recolectar candidatos
+	var candidates: Array[Vector2i] = []
+
+	for dx in range(-search_radius, search_radius + 1):
+		for dy in range(-search_radius, search_radius + 1):
+			var pos := current_tile + Vector2i(dx, dy)
+			if pos.x < 0 or pos.x >= GameConfig.WORLD_WIDTH or pos.y < 0 or pos.y >= GameConfig.WORLD_HEIGHT:
+				continue
+			if FogOfWar.get_tile_state(pos) != FogOfWar.TileState.UNKNOWN:
+				continue
+
+			# Verificar que esté adyacente a un tile visitado (borde de exploración)
+			var is_edge := false
+			for adx in range(-1, 2):
+				for ady in range(-1, 2):
+					var neighbor := pos + Vector2i(adx, ady)
+					if FogOfWar.is_revealed(neighbor):
+						is_edge = true
+						break
+				if is_edge:
+					break
+
+			if is_edge:
+				candidates.append(pos)
+
+	if candidates.is_empty():
+		return null
+
+	# Elegir uno aleatorio de los candidatos
+	return candidates[randi() % candidates.size()]
 
 
 func wander() -> void:
@@ -389,8 +565,48 @@ func wander() -> void:
 
 func enter_shelter(shelter: ShelterBuilding) -> void:
 	shelter.enter_beep(self)
+	_shelter = shelter
 	stats.set_state(BeepStats.State.RESTING)
 	stats.assigned_task = "resting_in_shelter"
+
+
+## Buscar refugio y entrar
+func _seek_and_enter_shelter() -> void:
+	var shelter = _find_nearest_shelter()
+	if shelter and shelter.has_space():
+		move_to_node(shelter)
+		stats.assigned_task = "seeking_shelter"
+	else:
+		# No hay refugio disponible, explorar para seguir buscando recursos
+		explore()
+
+
+## Intentar salir del refugio si las stats están bien
+func _try_leave_shelter() -> void:
+	if _shelter == null:
+		return
+
+	# Verificar si puede salir
+	if stats.health >= HEALTH_THRESHOLD_LEAVE and stats.energy >= ENERGY_THRESHOLD_LEAVE:
+		_leave_shelter()
+		return
+
+	# Verificar si el refugio ya no existe
+	if not is_instance_valid(_shelter):
+		_shelter = null
+		stats.set_state(BeepStats.State.IDLE)
+		stats.assigned_task = "idle"
+		return
+
+
+## Salir del refugio
+func _leave_shelter() -> void:
+	if _shelter and is_instance_valid(_shelter):
+		_shelter.exit_beep(self)
+	_shelter = null
+	_time_since_rest = 0.0
+	stats.set_state(BeepStats.State.IDLE)
+	stats.assigned_task = "idle"
 
 
 func heal(amount: float) -> void:
@@ -534,18 +750,5 @@ func _find_nearest_shelter() -> ShelterBuilding:
 
 
 func _get_build_position() -> Vector2:
-	var angle = randf() * TAU
-	var distance = 80.0 + randf() * 60.0
-	return position + Vector2.from_angle(angle) * distance
-
-
-func _build_shelter(build_pos: Vector2) -> void:
-	if not ResourceManager.consume_shelter_cost():
-		return
-
-	var shelter = SHELTER_SCENE.instantiate()
-	shelter.position = build_pos
-	
-	var parent = get_parent()
-	if parent:
-		parent.add_child(shelter)
+	# Delegate to ConstructionManager
+	return ConstructionManager.get_build_position()

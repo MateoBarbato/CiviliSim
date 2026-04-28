@@ -59,8 +59,29 @@ func _draw() -> void:
 	)
 	draw_rect(door_rect, Color(0.2, 0.15, 0.1))
 
-	# Indicador ocupantes
-	if not is_under_construction and occupants.size() > 0:
+	# Barra de progreso de construcción
+	if is_under_construction:
+		var bar_width: float = SHELTER_WIDTH + 8
+		var bar_height: float = 4.0
+		var bar_y: float = -SHELTER_HEIGHT / 2.0 - ROOF_HEIGHT - 10
+
+		# Fondo
+		draw_rect(Rect2(-bar_width / 2.0, bar_y, bar_width, bar_height), Color(0.2, 0.2, 0.2, 0.8))
+
+		# Progreso
+		var progress_width: float = bar_width * minf(construction_progress, 1.0)
+		var progress_color: Color = Color(0.3, 0.9, 0.3)
+		if construction_progress < 0.3:
+			progress_color = Color(0.9, 0.7, 0.2)
+		draw_rect(Rect2(-bar_width / 2.0, bar_y, progress_width, bar_height), progress_color)
+
+		# Texto porcentaje
+		var font := ThemeDB.fallback_font
+		if font:
+			var pct_text := "%.0f%%" % (construction_progress * 100.0)
+			var text_pos := Vector2(-6, bar_y - 2)
+			draw_string(font, text_pos, pct_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 11)
+	elif occupants.size() > 0:
 		var count_text := str(occupants.size())
 		var font := ThemeDB.fallback_font
 		if font:
@@ -86,8 +107,22 @@ func _process(delta: float) -> void:
 
 func _heal_occupants(delta: float) -> void:
 	for beep in occupants:
-		if is_instance_valid(beep) and beep.has_method("heal"):
+		if not is_instance_valid(beep):
+			occupants.erase(beep)
+			queue_redraw()
+			continue
+
+		# Curar salud
+		if beep.has_method("heal"):
 			beep.heal(heal_rate * delta)
+
+		# Regenerar energía (mitad de la tasa de curación)
+		if beep.has_method("stats"):
+			beep.stats.energy = clampf(
+				beep.stats.energy + (heal_rate * 0.5 * delta),
+				0.0,
+				100.0
+			)
 
 
 func _construction_complete() -> void:

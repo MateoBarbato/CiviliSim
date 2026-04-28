@@ -14,6 +14,12 @@ var world_width: int = GameConfig.WORLD_WIDTH
 var world_height: int = GameConfig.WORLD_HEIGHT
 
 var _spawn_timer: float = 0.0
+var _fog_visual: TileMap = null
+var _fog_update_timer: float = 0.0
+var _fog_enabled: bool = true
+
+## Batch init de fog: pintar todo el mapa de negro
+var _fog_init_y: int = 0
 
 enum Terrain {
 	GRASS,
@@ -40,6 +46,112 @@ func _ready() -> void:
 	_generate_terrain()
 	_create_terrain_visuals()
 	_initialize_spawn_manager()
+	_create_fog_overlay()
+
+
+func _toggle_fog() -> void:
+	_fog_enabled = not _fog_enabled
+	if _fog_visual:
+		_fog_visual.visible = _fog_enabled
+	if GameConfig.DEBUG_PRINT_DECISIONS:
+		print("[FOG] Toggle: ", "ON" if _fog_enabled else "OFF")
+
+
+## Crear overlay de niebla de guerra
+func _create_fog_overlay() -> void:
+	_fog_visual = TileMap.new()
+	_fog_visual.name = "FogOfWarVisual"
+	_fog_visual.z_index = 100
+	_setup_fog_tileset()
+	add_child(_fog_visual)
+	# Empezar pintado inicial en batches
+	_fog_init_y = 0
+
+
+func _setup_fog_tileset() -> void:
+	var atlas_img := Image.create(GameConfig.TILE_SIZE * 2, GameConfig.TILE_SIZE, false, Image.FORMAT_RGBA8)
+	# Tile 0: UNKNOWN (negro opaco)
+	for dx in range(GameConfig.TILE_SIZE):
+		for dy in range(GameConfig.TILE_SIZE):
+			atlas_img.set_pixel(dx, dy, Color(0.05, 0.05, 0.08, 1.0))
+	# Tile 1: VISITED (gris)
+	for dx in range(GameConfig.TILE_SIZE):
+		for dy in range(GameConfig.TILE_SIZE):
+			atlas_img.set_pixel(GameConfig.TILE_SIZE + dx, dy, Color(0.15, 0.15, 0.2, 0.6))
+	var atlas_tex := ImageTexture.create_from_image(atlas_img)
+	var tileset := TileSet.new()
+	tileset.tile_size = Vector2i(GameConfig.TILE_SIZE, GameConfig.TILE_SIZE)
+	var source := TileSetAtlasSource.new()
+	source.texture = atlas_tex
+	source.texture_region_size = Vector2i(GameConfig.TILE_SIZE, GameConfig.TILE_SIZE)
+	source.create_tile(Vector2i(0, 0))
+	source.create_tile(Vector2i(1, 0))
+	tileset.add_source(source, 0)
+	_fog_visual.tile_set = tileset
+
+
+func _process(delta: float) -> void:
+	_spawn_timer += delta
+	if _spawn_timer >= GameConfig.RESOURCE_SPAWN_INTERVAL:
+		_spawn_timer = 0.0
+		_spawn_periodic_resources()
+
+	# Batch init: pintar filas del mapa de negro
+	if _fog_init_y < world_height:
+		_paint_fog_init_rows(15)
+
+	# Refrescar area visible
+	_fog_update_timer += delta
+	if _fog_update_timer >= 0.5:
+		_fog_update_timer = 0.0
+		call_deferred("_deferred_refresh_fog")
+
+
+## Pintar filas del mapa como UNKNOWN (batch para no bloquear)
+func _paint_fog_init_rows(rows: int) -> void:
+	if _fog_visual == null:
+		return
+	var end_y: int = min(_fog_init_y + rows, world_height)
+	for y in range(_fog_init_y, end_y):
+		for x in range(world_width):
+			_fog_visual.set_cell(0, Vector2i(x, y), 0, Vector2i(0, 0))
+	_fog_init_y = end_y
+
+
+## Deferred refresh (executed after autoloads have processed)
+func _deferred_refresh_fog() -> void:
+	if not _fog_enabled or _fog_visual == null:
+		return
+	_refresh_visible_area()
+
+
+## Refrescar solo el area visible de la camara
+func _refresh_visible_area() -> void:
+	var cam := get_viewport().get_camera_2d()
+	if cam == null:
+		return
+
+	var cam_pos := cam.position
+	var zoom_val := cam.zoom.x
+	var vp_size: Vector2i = get_viewport().size
+	var radius_x := ceilf(vp_size.x / 2.0 / zoom_val / GameConfig.TILE_SIZE) + 2
+	var radius_y := ceilf(vp_size.y / 2.0 / zoom_val / GameConfig.TILE_SIZE) + 2
+	var tile_center: Vector2i = Vector2i(cam_pos.x / GameConfig.TILE_SIZE, cam_pos.y / GameConfig.TILE_SIZE)
+
+	for dx in range(-radius_x, radius_x + 1):
+		for dy in range(-radius_y, radius_y + 1):
+			var pos: Vector2i = tile_center + Vector2i(dx, dy)
+			if pos.x < 0 or pos.x >= GameConfig.WORLD_WIDTH or pos.y < 0 or pos.y >= GameConfig.WORLD_HEIGHT:
+				continue
+			var state := FogOfWar.get_tile_state(pos)
+			match state:
+				FogOfWar.TileState.UNKNOWN:
+					# Ya pintado en init, no hacer nada
+					pass
+				FogOfWar.TileState.VISITED:
+					_fog_visual.set_cell(0, pos, 0, Vector2i(1, 0))
+				FogOfWar.TileState.VISIBLE:
+					_fog_visual.set_cell(0, pos, -1)
 
 
 func _generate_terrain() -> void:
@@ -116,13 +228,6 @@ func _create_terrain_visuals() -> void:
 			tile_map.set_cell(0, Vector2i(x, y), 0, Vector2i(terrain, 0))
 
 
-func _process(delta: float) -> void:
-	_spawn_timer += delta
-	if _spawn_timer >= GameConfig.RESOURCE_SPAWN_INTERVAL:
-		_spawn_timer = 0.0
-		_spawn_periodic_resources()
-
-
 func _initialize_spawn_manager() -> void:
 	spawn_manager.set_tile_map(tile_map)
 	spawn_manager._resource_scene = RESOURCE_SCENE
@@ -132,6 +237,8 @@ func _initialize_spawn_manager() -> void:
 
 func initialize_beeps() -> void:
 	spawn_manager.spawn_initial_beeps(GameConfig.INITIAL_BEEP_COUNT, beep_container)
+	# Forzar primer update de fog inmediatamente
+	FogOfWar.update_now()
 
 
 func _spawn_initial_resources() -> void:
