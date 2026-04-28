@@ -71,9 +71,9 @@ func _update_debug_info() -> void:
 	info.append("")
 	info.append("--- Recursos ---")
 	var res_state = ResourceManager.get_resource_state()
-	info.append("Comida: %.0f / %d (%.0f%%)" % [res_state["food"], ResourceManager.MAX_FOOD, res_state["food_percent"]])
-	info.append("Madera: %.0f / %d (%.0f%%)" % [res_state["wood"], ResourceManager.MAX_WOOD, res_state["wood_percent"]])
-	info.append("Piedra: %.0f / %d (%.0f%%)" % [res_state["stone"], ResourceManager.MAX_STONE, res_state["stone_percent"]])
+	info.append("Comida: %.0f / %.0f (%.0f%%)" % [res_state["food"], res_state["max_food"], res_state["food_percent"]])
+	info.append("Madera: %.0f / %.0f (%.0f%%)" % [res_state["wood"], res_state["max_wood"], res_state["wood_percent"]])
+	info.append("Piedra: %.0f / %.0f (%.0f%%)" % [res_state["stone"], res_state["max_stone"], res_state["stone_percent"]])
 	
 	info.append("")
 	info.append("--- Edificios ---")

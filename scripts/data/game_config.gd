@@ -62,6 +62,11 @@ const SHELTER_COST_WOOD: float = 15.0  # alias = BuildingType.DATA[Type.SHELTER]
 const SHELTER_COST_STONE: float = 5.0  # alias = BuildingType.DATA[Type.SHELTER].cost_stone
 const SHELTER_CAPACITY: int = 10  # alias = BuildingType.DATA[Type.SHELTER].capacity
 const SHELTER_HEAL_RATE: float = 1.0  # alias = BuildingType.DATA[Type.SHELTER].heals_per_second
+## Límites de edificios por tipo
+const MAX_SHELTERS: int = 3
+const MAX_PATHS: int = 8
+const MAX_WAREHOUSES: int = 3
+const MAX_RESEARCH_CENTERS: int = 2
 
 # --- Condición de victoria/derrota ---
 const WIN_POPULATION: int = 15

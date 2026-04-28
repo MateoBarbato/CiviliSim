@@ -182,6 +182,18 @@ func _decide_action() -> void:
 		join_construction()
 		return
 
+	# Building Diversity: proponer almacén si los recursos están altos
+	if ConstructionManager.should_start_warehouse_construction() and randf() < 0.12:
+		ConstructionManager.start_warehouse_construction()
+		join_construction()
+		return
+
+	# Building Diversity: proponer centro de investigación si hay conocimiento y recursos
+	if ConstructionManager.should_start_research_center_construction() and randf() < 0.08:
+		ConstructionManager.start_research_center_construction()
+		join_construction()
+		return
+
 	# Si hay una construcción activa y este beep no está asignado, unirse como worker
 	if ConstructionManager.is_construction_active() and not ConstructionManager.assigned_workers.has(self):
 		join_construction()

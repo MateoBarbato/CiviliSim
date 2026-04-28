@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 uuid="uid://dckw2h7q9p3s1"]
+
+[ext_resource type="Script" path="res://scenes/buildings/Warehouse.gd" id="1_warehouse"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(40.0, 32.0)
+
+[node name="Warehouse" type="Node2D"]
+script = ExtResource("1_warehouse")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.55, 0.45, 0.3, 1)
+
+[node name="ProgressBar" type="ProgressBar" parent="."]
+offset_left = -24.0
+offset_top = -28.0
+offset_right = 24.0
+offset_bottom = -24.0
+value = 0.0
+max_value = 100.0
+show_percentage = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")

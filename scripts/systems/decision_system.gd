@@ -51,6 +51,12 @@ var _invasion_cooldown: float = 0.0
 var _discovery_cooldown: float = 0.0
 const DISCOVERY_COOLDOWN: float = 30.0  # segundos entre eventos de descubrimiento
 
+## Construction event cooldowns
+var _warehouse_cooldown: float = 0.0
+var _research_center_cooldown: float = 0.0
+const WAREHOUSE_COOLDOWN: float = 60.0
+const RESEARCH_CENTER_COOLDOWN: float = 90.0
+
 
 func _ready() -> void:
 	_generate_event_pool()
@@ -69,6 +75,7 @@ func _process(delta: float) -> void:
 
 	_update_discovery_cooldown(delta)
 	_update_invasion_cooldown(delta)
+	_update_construction_cooldowns(delta)
 	_update_persistent_effects(delta)
 	_update_difficulty_phase()
 
@@ -202,6 +209,11 @@ func _register_chains() -> void:
 			"chain_exploration_find",   # 2: hallazgo
 			"chain_exploration_claim",  # 3: reclamar territorio
 		],
+		"building_expansion": [
+			"chain_storage_needs",      # 1: necesitamos más almacenamiento
+			"chain_research_push",      # 2: investigar para mejorar
+			"chain_expansion_boom",     # 3: boom de expansión
+		],
 	}
 
 
@@ -284,6 +296,12 @@ func _call_chain_generator(name: String) -> Dictionary:
 			return _chain_exploration_find_event()
 		"chain_exploration_claim":
 			return _chain_exploration_claim_event()
+		"chain_storage_needs":
+			return _chain_storage_needs_event()
+		"chain_research_push":
+			return _chain_research_push_event()
+		"chain_expansion_boom":
+			return _chain_expansion_boom_event()
 	return {}
 
 
@@ -306,6 +324,9 @@ func _generate_event_pool() -> void:
 		_invasion_event(),
 		_storm_event(),
 		_diplomacy_event(),
+		# Building diversity events
+		_warehouse_event(),
+		_research_center_event(),
 	]
 
 
@@ -341,6 +362,7 @@ func _try_start_random_chain() -> void:
 	var state: Dictionary = ResourceManager.get_resource_state()
 	var food: float = state.get("food", 0.0)
 	var wood: float = state.get("wood", 0.0)
+	var stone: float = state.get("stone", 0.0)
 	var pop: int = ColonyManager.population
 	var health: float = ColonyManager.health_average
 
@@ -352,6 +374,9 @@ func _try_start_random_chain() -> void:
 		eligible_chains.append("disease_outbreak")
 	if food > 60.0 and wood > 40.0 and not _has_recently_resolved("exploration_fever"):
 		eligible_chains.append("exploration_fever")
+	# Building expansion chain: recursos altos, buena colonia
+	if food > 80.0 and wood > 60.0 and stone > 40.0 and pop >= 5 and not _has_recently_resolved("building_expansion"):
+		eligible_chains.append("building_expansion")
 
 	if eligible_chains.is_empty():
 		return
@@ -617,6 +642,27 @@ func _event_weight(event: Dictionary, food: float, wood: float, stone: float, po
 			if happiness > 70.0:
 				return 2
 			return 1
+		"construction":
+			var building: String = event.get("building", "")
+			if building == "warehouse":
+				# Más probable si los recursos están altos (casi al límite)
+				if food > 250.0 or wood > 150.0 or stone > 80.0:
+					return 3
+				if food > 150.0 or wood > 100.0:
+					return 2
+				if _can_trigger_warehouse():
+					return 1
+				return 0
+			if building == "research_center":
+				# Más probable si hay suficiente conocimiento y recursos
+				var knowledge: float = ColonyManager.knowledge
+				if knowledge > 30.0 and food > 100.0 and wood > 80.0:
+					return 3
+				if knowledge > 15.0 and _can_trigger_research_center():
+					return 2
+				if _can_trigger_research_center():
+					return 1
+				return 0
 		_:
 			return 1
 
@@ -1182,6 +1228,158 @@ func _chain_exploration_claim_event() -> Dictionary:
 	}
 
 
+## --- Construction Event Generators ---
+
+func _warehouse_event() -> Dictionary:
+	var state: Dictionary = ResourceManager.get_resource_state()
+	var food: float = state.get("food", 0.0)
+	var wood: float = state.get("wood", 0.0)
+	var stone: float = state.get("stone", 0.0)
+	var food_pct: float = state.get("food_percent", 0.0)
+	var wood_pct: float = state.get("wood_percent", 0.0)
+	var stone_pct: float = state.get("stone_percent", 0.0)
+
+	var urgency: float = 0.5
+	# Aumentar urgencia si los recursos están llenos
+	if food_pct > 80.0 or wood_pct > 80.0 or stone_pct > 80.0:
+		urgency = 0.75
+
+	var wood_cost: float = BuildingType.get_cost_wood(BuildingType.Type.WAREHOUSE)
+	var stone_cost: float = BuildingType.get_cost_stone(BuildingType.Type.WAREHOUSE)
+	var food_cost: float = BuildingType.get_cost_food(BuildingType.Type.WAREHOUSE)
+
+	return {
+		"type": "construction",
+		"building": "warehouse",
+		"description": "Los Beeps necesitan más espacio de almacenamiento. Los recursos se acumulan y no tenemos dónde guardarlos.",
+		"urgency": urgency,
+		"options": [
+			{
+				"id": "build_warehouse",
+				"text": "Construir un almacén",
+				"effects": {
+					"wood": -wood_cost,
+					"stone": -stone_cost,
+					"food": -food_cost,
+					"priority": "construction",
+					"happiness": 10,
+					"knowledge": 5,
+					"action": "start_warehouse_construction"
+				}
+			},
+			{
+				"id": "postpone_warehouse",
+				"text": "Esperar a tener más recursos",
+				"effects": {
+					"happiness": -3
+				}
+			},
+			{
+				"id": "expand_shelters_instead",
+				"text": "Expandir refugios en su lugar",
+				"effects": {
+					"wood": -_scaled_value(10.0),
+					"stone": -_scaled_value(5.0),
+					"priority": "construction",
+					"happiness": 5
+				}
+			}
+		],
+		"default_option": {
+			"id": "warehouse_default",
+			"text": "No construir nada",
+			"effects": {
+				"happiness": -5
+			}
+		}
+	}
+
+
+func _research_center_event() -> Dictionary:
+	var knowledge: float = ColonyManager.knowledge
+	var wood_cost: float = BuildingType.get_cost_wood(BuildingType.Type.RESEARCH_CENTER)
+	var stone_cost: float = BuildingType.get_cost_stone(BuildingType.Type.RESEARCH_CENTER)
+	var food_cost: float = BuildingType.get_cost_food(BuildingType.Type.RESEARCH_CENTER)
+
+	return {
+		"type": "construction",
+		"building": "research_center",
+		"description": "Los Beeps más sabios sugieren crear un centro de investigación para mejorar nuestras técnicas.",
+		"urgency": 0.4,
+		"options": [
+			{
+				"id": "build_research_center",
+				"text": "Construir el centro de investigación",
+				"effects": {
+					"wood": -wood_cost,
+					"stone": -stone_cost,
+					"food": -food_cost,
+					"priority": "construction",
+					"happiness": 15,
+					"knowledge": 20,
+					"action": "start_research_center_construction"
+				}
+			},
+			{
+				"id": "postpone_research",
+				"text": "Demasiado caro por ahora",
+				"effects": {
+					"knowledge": 3,
+					"happiness": -5
+				}
+			}
+		],
+		"default_option": {
+			"id": "research_default",
+			"text": "No invertir en investigación",
+			"effects": {
+				"happiness": -3,
+				"knowledge": -2
+			}
+		}
+	}
+
+
+## --- Construction Trigger Helpers ---
+
+func _can_trigger_warehouse() -> bool:
+	# Cooldown
+	if _warehouse_cooldown > 0.0:
+		return false
+	# No hay construcción activa
+	if ConstructionManager.has_active_order:
+		return false
+	# Prerequisitos
+	if not ConstructionManager._check_prerequisites(BuildingType.Type.WAREHOUSE):
+		return false
+	# Recursos
+	if not ConstructionManager._check_resources(BuildingType.Type.WAREHOUSE):
+		return false
+	# No estar al límite
+	if not ConstructionManager._check_type_limit(BuildingType.Type.WAREHOUSE):
+		return false
+	return true
+
+
+func _can_trigger_research_center() -> bool:
+	# Cooldown
+	if _research_center_cooldown > 0.0:
+		return false
+	# No hay construcción activa
+	if ConstructionManager.has_active_order:
+		return false
+	# Prerequisitos
+	if not ConstructionManager._check_prerequisites(BuildingType.Type.RESEARCH_CENTER):
+		return false
+	# Recursos
+	if not ConstructionManager._check_resources(BuildingType.Type.RESEARCH_CENTER):
+		return false
+	# No estar al límite
+	if not ConstructionManager._check_type_limit(BuildingType.Type.RESEARCH_CENTER):
+		return false
+	return true
+
+
 func _apply_effects(effects: Dictionary) -> void:
 	for key in effects:
 		match key:
@@ -1231,6 +1429,14 @@ func _apply_effects(effects: Dictionary) -> void:
 				# Format: { "name": str, "delta": float, "duration": float }
 				var pe: Dictionary = effects[key]
 				add_persistent_effect(pe["name"], pe["delta"], pe["duration"])
+			"action":
+				match effects[key]:
+					"start_warehouse_construction":
+						ConstructionManager.start_warehouse_construction()
+						_warehouse_cooldown = WAREHOUSE_COOLDOWN
+					"start_research_center_construction":
+						ConstructionManager.start_research_center_construction()
+						_research_center_cooldown = RESEARCH_CENTER_COOLDOWN
 
 
 func get_response_percentage() -> float:
@@ -1728,3 +1934,171 @@ func _map_complete_event() -> Dictionary:
 func _update_discovery_cooldown(delta: float) -> void:
 	if _discovery_cooldown > 0:
 		_discovery_cooldown -= delta
+
+
+## Update construction cooldowns
+func _update_construction_cooldowns(delta: float) -> void:
+	if _warehouse_cooldown > 0.0:
+		_warehouse_cooldown -= delta
+	if _research_center_cooldown > 0.0:
+		_research_center_cooldown -= delta
+
+
+## --- Building Expansion Chain Events ---
+
+func _chain_storage_needs_event() -> Dictionary:
+	var state: Dictionary = ResourceManager.get_resource_state()
+	var food: float = state.get("food", 0.0)
+	var wood: float = state.get("wood", 0.0)
+	var stone: float = state.get("stone", 0.0)
+	var food_pct: float = state.get("food_percent", 0.0)
+	var wood_pct: float = state.get("wood_percent", 0.0)
+
+	var urgency: float = 0.4
+	if food_pct > 70.0 or wood_pct > 70.0:
+		urgency = 0.65
+
+	var wood_cost: float = BuildingType.get_cost_wood(BuildingType.Type.WAREHOUSE)
+	var stone_cost: float = BuildingType.get_cost_stone(BuildingType.Type.WAREHOUSE)
+	var food_cost: float = BuildingType.get_cost_food(BuildingType.Type.WAREHOUSE)
+
+	return {
+		"type": "chain",
+		"description": "Los almacenes se llenan rápido. La colonia necesita más espacio de almacenamiento para los recursos.",
+		"urgency": urgency,
+		"options": [
+			{
+				"id": "chain_build_warehouse",
+				"text": "Construir un almacén para la colonia",
+				"effects": {
+					"wood": -wood_cost,
+					"stone": -stone_cost,
+					"food": -food_cost,
+					"priority": "construction",
+					"happiness": 10,
+					"knowledge": 5,
+					"action": "start_warehouse_construction"
+				},
+				"advance_chain": true
+			},
+			{
+				"id": "chain_optimize_current",
+				"text": "Optimizar lo que tenemos ahora",
+				"effects": {
+					"happiness": 3,
+					"knowledge": 8
+				},
+				"advance_chain": true
+			}
+		],
+		"default_option": {
+			"id": "chain_storage_default",
+			"text": "Ignorar el problema",
+			"effects": {
+				"happiness": -5,
+				"food": -_scaled_value(5.0)
+			},
+			"advance_chain": true
+		}
+	}
+
+
+func _chain_research_push_event() -> Dictionary:
+	var knowledge: float = ColonyManager.knowledge
+	var wood_cost: float = BuildingType.get_cost_wood(BuildingType.Type.RESEARCH_CENTER)
+	var stone_cost: float = BuildingType.get_cost_stone(BuildingType.Type.RESEARCH_CENTER)
+	var food_cost: float = BuildingType.get_cost_food(BuildingType.Type.RESEARCH_CENTER)
+
+	return {
+		"type": "chain",
+		"description": "Los Beeps más sabios proponen crear un centro de investigación para mejorar nuestras técnicas y herramientas.",
+		"urgency": 0.5,
+		"options": [
+			{
+				"id": "chain_build_research",
+				"text": "Invertir en investigación y conocimiento",
+				"effects": {
+					"wood": -wood_cost,
+					"stone": -stone_cost,
+					"food": -food_cost,
+					"priority": "construction",
+					"happiness": 15,
+					"knowledge": 20,
+					"action": "start_research_center_construction"
+				},
+				"advance_chain": true
+			},
+			{
+				"id": "chain_focus_practical",
+				"text": "Mejorar técnicas prácticas primero",
+				"effects": {
+					"knowledge": 10,
+					"happiness": 5,
+					"persistent_effect": {"name": "research_bonus", "delta": 1.0, "duration": 60.0}
+				},
+				"advance_chain": true
+			}
+		],
+		"default_option": {
+			"id": "chain_research_default",
+			"text": "Postergar la decisión",
+			"effects": {
+				"knowledge": 2,
+				"happiness": -3
+			},
+			"advance_chain": true
+		}
+	}
+
+
+func _chain_expansion_boom_event() -> Dictionary:
+	var state: Dictionary = ResourceManager.get_resource_state()
+	var food: float = state.get("food", 0.0)
+	var pop: int = ColonyManager.population
+
+	return {
+		"type": "chain",
+		"description": "La colonia crece y prospera. Es momento de una gran expansión para asegurar nuestro futuro.",
+		"urgency": 0.35,
+		"options": [
+			{
+				"id": "chain_mega_expansion",
+				"text": "¡Gran expansión! Construir y mejorar todo",
+				"effects": {
+					"priority": "construction",
+					"food": -_scaled_value(20.0),
+					"wood": -_scaled_value(15.0),
+					"stone": -_scaled_value(10.0),
+					"happiness": 25,
+					"knowledge": 15,
+					"social_order": 10,
+					"persistent_effect": {"name": "celebration_bonus", "delta": 2.0, "duration": 90.0}
+				},
+				"advance_chain": false
+			},
+			{
+				"id": "chain_balanced_growth",
+				"text": "Crecimiento equilibrado con planificación",
+				"effects": {
+					"priority": "construction",
+					"food": -_scaled_value(10.0),
+					"wood": -_scaled_value(8.0),
+					"stone": -_scaled_value(5.0),
+					"happiness": 15,
+					"knowledge": 20,
+					"social_order": 5,
+					"persistent_effect": {"name": "research_bonus", "delta": 1.5, "duration": 60.0}
+				},
+				"advance_chain": false
+			}
+		],
+		"default_option": {
+			"id": "chain_boom_default",
+			"text": "Mantener el ritmo actual",
+			"effects": {
+				"happiness": 5,
+				"knowledge": 5
+			},
+			"advance_chain": false
+		}
+	}

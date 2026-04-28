@@ -5,6 +5,8 @@ extends Node
 
 const SHELTER_SCENE: PackedScene = preload("res://scenes/buildings/shelter.tscn")
 const PATH_SCENE: PackedScene = preload("res://scenes/buildings/path.tscn")
+const WAREHOUSE_SCENE: PackedScene = preload("res://scenes/buildings/warehouse.tscn")
+const RESEARCH_CENTER_SCENE: PackedScene = preload("res://scenes/buildings/research_center.tscn")
 
 signal construction_started(building_type: String, position: Vector2)
 signal construction_completed(building: BuildingBase)
@@ -12,10 +14,9 @@ signal construction_failed(reason: String)
 signal construction_progress_updated(progress: float, building_type: String)
 
 ## Tipo de edificio que se puede construir
-enum PendingType { SHELTER, PATH }
+enum PendingType { SHELTER, PATH, WAREHOUSE, RESEARCH_CENTER }
 
-## Límite de caminos
-const MAX_PATHS: int = 8
+## Límites por tipo de edificio (desde GameConfig)
 
 ## Orden de construcción pendiente (solo una a la vez en MVP1)
 var current_order: Dictionary = {}
@@ -68,63 +69,40 @@ func _update_progress(delta: float) -> void:
 
 ## Verificar si se puede construir un refugio
 func should_start_construction() -> bool:
-	# Ya hay una construcción activa
-	if has_active_order:
-		return false
+	return should_start_building_type(BuildingType.Type.SHELTER)
 
-	# Si ya hay refugios completos, no priorizar más construcción (MVP1)
-	var shelter_count: int = 0
-	for b in ColonyManager.buildings:
-		if _is_shelter(b) and not b.is_under_construction:
-			shelter_count += 1
 
-	# Límite de refugios en MVP1
-	if shelter_count >= 3:
-		return false
+## Verificar si se puede construir un almacén
+func should_start_warehouse_construction() -> bool:
+	return should_start_building_type(BuildingType.Type.WAREHOUSE)
 
-	# Verificar recursos
-	if not ResourceManager.has_enough_for_shelter():
-		return false
 
-	# Solo si hay beeps disponibles (no trabajando en otra cosa crítica)
-	var available_beeps: int = _count_available_beeps()
-	if available_beeps < 1:
-		return false
-
-	return true
+## Verificar si se puede construir un centro de investigación
+func should_start_research_center_construction() -> bool:
+	return should_start_building_type(BuildingType.Type.RESEARCH_CENTER)
 
 
 ## Verificar si se puede construir un camino
 func should_start_path_construction() -> bool:
+	return should_start_building_type(BuildingType.Type.PATH)
+
+
+## Verificación genérica para cualquier tipo de edificio
+func should_start_building_type(type: int) -> bool:
 	# Ya hay una construcción activa
 	if has_active_order:
 		return false
 
-	# Contar caminos existentes
-	var path_count: int = 0
-	for b in ColonyManager.buildings:
-		if _is_path(b):
-			path_count += 1
-
-	# Límite de caminos
-	if path_count >= MAX_PATHS:
+	# Verificar límite por tipo
+	if not _check_type_limit(type):
 		return false
 
-	# Necesita al menos un refugio para construir caminos
-	var has_shelter: bool = false
-	for b in ColonyManager.buildings:
-		if _is_shelter(b) and not b.is_under_construction:
-			has_shelter = true
-			break
-
-	if not has_shelter:
+	# Verificar prerequisitos
+	if not _check_prerequisites(type):
 		return false
 
 	# Verificar recursos
-	var wood_cost: float = BuildingType.get_cost_wood(BuildingType.Type.PATH)
-	var stone_cost: float = BuildingType.get_cost_stone(BuildingType.Type.PATH)
-
-	if ResourceManager.get_wood() < wood_cost or ResourceManager.get_stone() < stone_cost:
+	if not _check_resources(type):
 		return false
 
 	# Solo si hay beeps disponibles
@@ -132,6 +110,79 @@ func should_start_path_construction() -> bool:
 	if available_beeps < 1:
 		return false
 
+	return true
+
+
+## Verificar si se ha alcanzado el límite de un tipo de edificio
+func _check_type_limit(type: int) -> bool:
+	match type:
+		BuildingType.Type.PATH:
+			var count: int = 0
+			for b in ColonyManager.buildings:
+				if _is_path(b):
+					count += 1
+			return count < GameConfig.MAX_PATHS
+		BuildingType.Type.SHELTER:
+			var count: int = 0
+			for b in ColonyManager.buildings:
+				if _is_shelter(b) and not b.is_under_construction:
+					count += 1
+			return count < GameConfig.MAX_SHELTERS
+		BuildingType.Type.WAREHOUSE:
+			var count: int = 0
+			for b in ColonyManager.buildings:
+				if _is_warehouse(b):
+					count += 1
+			return count < GameConfig.MAX_WAREHOUSES
+		BuildingType.Type.RESEARCH_CENTER:
+			var count: int = 0
+			for b in ColonyManager.buildings:
+				if _is_research_center(b):
+					count += 1
+			return count < GameConfig.MAX_RESEARCH_CENTERS
+	return true
+
+
+## Verificar prerequisitos para construir un tipo
+func _check_prerequisites(type: int) -> bool:
+	match type:
+		BuildingType.Type.PATH:
+			# Necesita al menos un refugio
+			for b in ColonyManager.buildings:
+				if _is_shelter(b) and not b.is_under_construction:
+					return true
+			return false
+		BuildingType.Type.WAREHOUSE:
+			# Necesita al menos un refugio
+			for b in ColonyManager.buildings:
+				if _is_shelter(b) and not b.is_under_construction:
+					return true
+			return false
+		BuildingType.Type.RESEARCH_CENTER:
+			# Necesita al menos un refugio y un almacén
+			var has_shelter: bool = false
+			var has_warehouse: bool = false
+			for b in ColonyManager.buildings:
+				if _is_shelter(b) and not b.is_under_construction:
+					has_shelter = true
+				if _is_warehouse(b) and not b.is_under_construction:
+					has_warehouse = true
+			return has_shelter and has_warehouse
+	return true
+
+
+## Verificar recursos para un tipo de edificio
+func _check_resources(type: int) -> bool:
+	var wood_cost: float = BuildingType.get_cost_wood(type)
+	var stone_cost: float = BuildingType.get_cost_stone(type)
+	var food_cost: float = BuildingType.get_cost_food(type)
+
+	if ResourceManager.get_wood() < wood_cost:
+		return false
+	if ResourceManager.get_stone() < stone_cost:
+		return false
+	if food_cost > 0.0 and ResourceManager.get_food() < food_cost:
+		return false
 	return true
 
 
@@ -144,6 +195,14 @@ func _is_path(building: Node) -> bool:
 	return building.get("building_type") == "path"
 
 
+func _is_warehouse(building: Node) -> bool:
+	return building.get("building_type") == "warehouse"
+
+
+func _is_research_center(building: Node) -> bool:
+	return building.get("building_type") == "research_center"
+
+
 ## Iniciar construcción de un refugio
 func start_shelter_construction() -> void:
 	_start_construction(BuildingType.Type.SHELTER)
@@ -152,6 +211,16 @@ func start_shelter_construction() -> void:
 ## Iniciar construcción de un camino
 func start_path_construction() -> void:
 	_start_construction(BuildingType.Type.PATH)
+
+
+## Iniciar construcción de un almacén
+func start_warehouse_construction() -> void:
+	_start_construction(BuildingType.Type.WAREHOUSE)
+
+
+## Iniciar construcción de un centro de investigación
+func start_research_center_construction() -> void:
+	_start_construction(BuildingType.Type.RESEARCH_CENTER)
 
 
 ## Función genérica para iniciar construcción
@@ -176,14 +245,20 @@ func _start_construction(type: int) -> void:
 	# Verificar recursos
 	var wood_cost: float = BuildingType.get_cost_wood(type)
 	var stone_cost: float = BuildingType.get_cost_stone(type)
+	var food_cost: float = BuildingType.get_cost_food(type)
 
 	if ResourceManager.get_wood() < wood_cost or ResourceManager.get_stone() < stone_cost:
 		_fail_construction("Recursos insuficientes para %s" % name)
+		return
+	if food_cost > 0.0 and ResourceManager.get_food() < food_cost:
+		_fail_construction("Comida insuficiente para %s" % name)
 		return
 
 	# Consumir recursos (solo si la posición es válida)
 	ResourceManager.remove_wood(wood_cost)
 	ResourceManager.remove_stone(stone_cost)
+	if food_cost > 0.0:
+		ResourceManager.remove_food(food_cost)
 
 	has_active_order = true
 	construction_progress = 0.0
@@ -209,6 +284,8 @@ func _type_to_string(type: int) -> String:
 	match type:
 		BuildingType.Type.SHELTER: return "shelter"
 		BuildingType.Type.PATH: return "path"
+		BuildingType.Type.WAREHOUSE: return "warehouse"
+		BuildingType.Type.RESEARCH_CENTER: return "research_center"
 	return "unknown"
 
 
@@ -216,6 +293,8 @@ func _type_to_string(type: int) -> String:
 func _get_scene_for_type(type: int) -> PackedScene:
 	match type:
 		BuildingType.Type.PATH: return PATH_SCENE
+		BuildingType.Type.WAREHOUSE: return WAREHOUSE_SCENE
+		BuildingType.Type.RESEARCH_CENTER: return RESEARCH_CENTER_SCENE
 	return SHELTER_SCENE
 
 
@@ -298,11 +377,15 @@ func cancel_construction() -> void:
 	if not has_active_order:
 		return
 
-	# Devolver 50% de los recursos
-	var wood_cost: float = BuildingType.get_cost_wood(BuildingType.Type.SHELTER)
-	var stone_cost: float = BuildingType.get_cost_stone(BuildingType.Type.SHELTER)
+	# Devolver 50% de los recursos del tipo que se estaba construyendo
+	var bt: int = current_order.get("building_type", BuildingType.Type.SHELTER)
+	var wood_cost: float = BuildingType.get_cost_wood(bt)
+	var stone_cost: float = BuildingType.get_cost_stone(bt)
+	var food_cost: float = BuildingType.get_cost_food(bt)
 	ResourceManager.add_wood(wood_cost * 0.5)
 	ResourceManager.add_stone(stone_cost * 0.5)
+	if food_cost > 0.0:
+		ResourceManager.add_food(food_cost * 0.5)
 
 	_remove_construction_site()
 	has_active_order = false
@@ -405,9 +488,6 @@ func _find_valid_build_position() -> Vector2:
 		# Posición válida
 		return candidate
 
-		radius += 40.0
-		attempts += 1
-
 	# Fallback
 	return world_center + Vector2(MIN_DISTANCE_FROM_CENTER, 0)
 
@@ -431,13 +511,21 @@ static func is_valid_build_position(pos: Vector2, world: WorldScene) -> bool:
 	return true
 
 
-## Tasa de construcción con diminishing returns
+## Tasa de construcción con diminishing returns + bonus de investigación
 func _get_construction_rate(worker_count: int) -> float:
 	# Base rate: 0.08 por segundo con 1 worker
 	# Cada worker adicional suma menos (logarítmico)
 	var base_rate: float = 0.08
-	var bonus: float = 0.04 * (log(float(worker_count + 1)) / log(2.0))
-	return base_rate + bonus
+	var worker_bonus: float = 0.04 * (log(float(worker_count + 1)) / log(2.0))
+
+	# Bonus de velocidad de construcción desde centros de investigación
+	var research_bonus: float = 1.0
+	for b in ColonyManager.buildings:
+		if b.get("building_type") == "research_center" and not b.get("is_under_construction", true):
+			if b.has_method("get_construction_speed_bonus"):
+				research_bonus += b.get_construction_speed_bonus()
+
+	return (base_rate + worker_bonus) * research_bonus
 
 
 ## Contar beeps disponibles (no moviéndose, no trabajando, no durmiendo)

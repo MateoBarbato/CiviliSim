@@ -276,7 +276,8 @@ func _on_resource_collected(resource_type: ResourceType.Type, amount: float) -> 
 			ResourceManager.add_stone(amount)
 
 
-func _on_resource_depleted(_resource_node: Node) -> void:
+func _on_resource_depleted() -> void:
+	# TODO: despawn visual del nodo agotado y/o respawn después de un delay
 	pass
 
 

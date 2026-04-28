@@ -140,6 +140,9 @@ func _update_colony_stats(delta: float) -> void:
 	elif health_average > 70:
 		happiness = minf(100.0, happiness + 1.0 * delta)
 
+	# Sincronizar conocimiento total desde centros de investigación
+	knowledge = ResearchCenterBuilding.get_total_knowledge()
+
 
 func _check_game_conditions() -> void:
 	if population <= GameConfig.LOSE_POPULATION:
