@@ -97,3 +97,37 @@ const MAX_RESOURCES_ON_MAP: int = 60
 const CAMERA_ZOOM_MIN: float = 0.5
 const CAMERA_ZOOM_MAX: float = 2.0
 const CAMERA_ZOOM_SPEED: float = 0.5
+
+# --- Clima ---
+## Tiempo mínimo entre cambios de clima (s)
+const WEATHER_CHANGE_MIN_INTERVAL: float = 60.0
+## Tiempo máximo entre cambios de clima (s)
+const WEATHER_CHANGE_MAX_INTERVAL: float = 120.0
+## Duración default de tormenta forzada por evento (s)
+const WEATHER_STORM_DURATION: float = 30.0
+
+## Multiplicadores de velocidad por clima (aplicado a beeps afuera)
+const WEATHER_SPEED_CLEAR: float = 1.0
+const WEATHER_SPEED_RAIN: float = 0.7
+const WEATHER_SPEED_FOG: float = 0.8
+const WEATHER_SPEED_WIND: float = 0.8
+const WEATHER_SPEED_STORM: float = 0.4
+
+## Daño por segundo en tormenta (solo afuera del refugio)
+const WEATHER_STORM_DAMAGE_PER_SEC: float = 2.0
+
+## Bonus de regeneración de comida bajo lluvia
+const WEATHER_RAIN_FOOD_REGEN_MULT: float = 2.0
+## Bonus de regeneración de comida bajo tormenta
+const WEATHER_STORM_FOOD_REGEN_MULT: float = 3.0
+## Bonus de regeneración de madera bajo viento
+const WEATHER_WIND_WOOD_REGEN_MULT: float = 1.5
+
+## Reducción de radio de detección en niebla
+const WEATHER_FOG_DETECTION_MULT: float = 0.5
+
+## Chance por tick de nodo de recurso ser destruido en tormenta (0-1)
+const WEATHER_STORM_RESOURCE_DESTRUCT_CHANCE: float = 0.002
+
+## Shake de cámara en tormenta
+const WEATHER_STORM_SHAKE_STRENGTH: float = 2.0

@@ -29,6 +29,7 @@ BuildingType="*res://scripts/data/building_types.gd"
 ResourceType="*res://scripts/data/resource_types.gd"
 ColonyManager="*res://scripts/systems/colony_manager.gd"
 ResourceManager="*res://scripts/systems/resource_manager.gd"
+WeatherSystem="*res://scripts/systems/weather_system.gd"
 ConstructionManager="*res://scripts/systems/construction_manager.gd"
 FogOfWar="*res://scripts/systems/fog_of_war.gd"
 

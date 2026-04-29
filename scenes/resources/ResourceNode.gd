@@ -62,6 +62,16 @@ func _draw() -> void:
 func _process(delta: float) -> void:
 	_regenerate(delta)
 
+	# Clima: posibilidad de destrucción en tormenta (normalizado por delta)
+	if WeatherSystem.current_weather == WeatherSystem.Weather.STORM:
+		var destruct_chance: float = WeatherSystem.get_resource_destruct_chance() * delta
+		if randf() < destruct_chance:
+			_amount = maxf(_amount - 10.0, 0.0)
+			if _amount <= 0:
+				_is_active = false
+				resource_depleted.emit()
+			_update_visuals()
+
 
 func set_resource_type(resource_type: ResourceType.Type) -> void:
 	_resource_type = resource_type
@@ -125,9 +135,11 @@ func _update_visuals() -> void:
 
 func _regenerate(delta: float) -> void:
 	if _amount < _max_amount:
-		_amount += _regeneration_rate * delta
+		# Clima: multiplicador de regeneración según tipo de recurso y clima
+		var weather_mult: float = WeatherSystem.get_resource_regen_multiplier(_resource_type)
+		_amount += _regeneration_rate * weather_mult * delta
 		_amount = minf(_amount, _max_amount)
-		
+
 		if _amount > 0 and not _is_active:
 			_is_active = true
 			_update_visuals()

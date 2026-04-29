@@ -237,8 +237,14 @@ func _show_effects_preview(effects: Dictionary) -> void:
 		elif key == "persistent_effect":
 			var pe: Dictionary = effects[key]
 			parts.append("💊 %s (%.0fs)" % [pe["name"], pe["duration"]])
+		elif key == "action":
+			continue  # acciones internas, no mostrar al jugador
 		else:
 			var val = effects[key]
+			# Solo mostrar valores numéricos
+			if not (val is int or val is float):
+				continue
+			var num_val: float = float(val)
 			var icon: String
 			match key:
 				"food": icon = "🍖"
@@ -249,8 +255,8 @@ func _show_effects_preview(effects: Dictionary) -> void:
 				"social_order": icon = "⚖️"
 				"knowledge": icon = "📖"
 				_: icon = "?"
-			var sign_str = "+" if val > 0 else ""
-			parts.append("%s %s%d" % [icon, sign_str, int(val)])
+			var sign_str = "+" if num_val > 0 else ""
+			parts.append("%s %s%d" % [icon, sign_str, int(num_val)])
 
 	_effects_preview_label.text = "→ " + ", ".join(parts)
 	_effects_preview_label.visible = true

@@ -5,6 +5,8 @@
 [ext_resource type="Script" uid="uid://dajim2nmxmvmb" path="res://scripts/systems/reproduction_system.gd" id="3"]
 [ext_resource type="Script" uid="uid://ci71n40yy4lw6" path="res://scenes/ui/decision_panel.gd" id="4"]
 [ext_resource type="Script" uid="uid://dughypr73sc7p" path="res://scenes/camera/CameraController.gd" id="5"]
+[ext_resource type="Script" path="res://scenes/weather/WeatherOverlay.gd" id="6"]
+
 
 [node name="Main" type="Control" unique_id=181236177]
 layout_mode = 3
@@ -41,6 +43,73 @@ script = ExtResource("2")
 
 [node name="ReproductionSystem" type="Node" parent="SubViewportContainer/GameViewport" unique_id=347974210]
 script = ExtResource("3")
+
+[node name="WeatherOverlay" type="CanvasLayer" parent="SubViewportContainer/GameViewport" unique_id=941003001]
+layer = 10
+script = ExtResource("6")
+
+[node name="RainParticles" type="GPUParticles2D" parent="SubViewportContainer/GameViewport/WeatherOverlay" unique_id=941003002]
+process_mode = 3
+one_shot = false
+explosive = false
+amount = 200
+time = 1.0
+lifetime = 0.8
+pre_process = 0.1
+randomness = 0.85
+spread = 178.0
+direction = 1.5708
+negative_z = false
+texture_scale = 1.0
+emitting = false
+gravity = Vector2(0, 600)
+[node name="StormParticles" type="GPUParticles2D" parent="SubViewportContainer/GameViewport/WeatherOverlay" unique_id=941003003]
+process_mode = 3
+one_shot = false
+explosive = false
+amount = 150
+time = 1.0
+lifetime = 0.5
+pre_process = 0.0
+randomness = 0.9
+spread = 175.0
+direction = 1.5708
+negative_z = false
+emitting = false
+gravity = Vector2(0, 800)
+
+
+[node name="FogOverlay" type="ColorRect" parent="SubViewportContainer/GameViewport/WeatherOverlay" unique_id=941003004]
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+color = Color(0.7, 0.7, 0.75, 0.0)
+
+[node name="DarknessOverlay" type="ColorRect" parent="SubViewportContainer/GameViewport/WeatherOverlay" unique_id=941003005]
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+color = Color(0.2, 0.2, 0.3, 0.0)
+
+[node name="WindParticles" type="GPUParticles2D" parent="SubViewportContainer/GameViewport/WeatherOverlay" unique_id=941003006]
+process_mode = 3
+one_shot = false
+explosive = false
+amount = 100
+time = 1.0
+lifetime = 1.5
+pre_process = 0.0
+randomness = 0.7
+spread = 10.0
+direction = 0.0
+negative_z = false
+emitting = false
+gravity = Vector2(0, 0)
+
 
 [node name="Sidebar" type="VBoxContainer" parent="." unique_id=56595181]
 layout_mode = 1

@@ -96,6 +96,11 @@ func _physics_process(delta: float) -> void:
 	if _shelter == null:
 		_time_since_rest += delta
 
+	# Clima: daño por tormenta si está afuera del refugio
+	if _shelter == null and WeatherSystem.current_weather == WeatherSystem.Weather.STORM:
+		var storm_damage: float = WeatherSystem.get_storm_damage_per_sec() * delta
+		stats.health = maxf(stats.health - storm_damage, 0.0)
+
 	if _is_moving:
 		_move_toward_target(delta)
 		_check_stuck(delta)
@@ -115,6 +120,11 @@ func _decide_action() -> void:
 	# Si está dentro de un refugio, solo decidir si salir o quedarse
 	if _shelter != null:
 		_try_leave_shelter()
+		return
+
+	# Clima: en tormenta, buscar refugio urgentemente si está afuera
+	if WeatherSystem.current_weather == WeatherSystem.Weather.STORM and _shelter == null:
+		_seek_and_enter_shelter()
 		return
 
 	# Descanso preventivo: si lleva mucho tiempo sin descansar, ir al shelter
@@ -309,7 +319,11 @@ func _move_toward_target(delta: float) -> void:
 		_waypoint_index += 1
 		return
 
-	velocity = direction.normalized() * move_speed
+	# Clima: aplicar multiplicador de velocidad si está afuera
+	var speed_mult: float = move_speed
+	if _shelter == null:
+		speed_mult *= WeatherSystem.get_speed_multiplier()
+	velocity = direction.normalized() * speed_mult
 	stats.set_state(BeepStats.State.MOVING)
 
 
@@ -404,6 +418,18 @@ func _on_beep_died() -> void:
 	ColonyManager.unregister_beep(self)
 	FogOfWar.unregister_beep(self)
 	queue_free()
+
+
+## Cleanup al destruir el nodo — libera reserva propia y garbage collection del dict
+func _exit_tree() -> void:
+	_release_current_resource_target()
+	# GC: eliminar entries huérfanas (instance_id de beeps que ya no existen)
+	var keys_to_remove: Array[int] = []
+	for key: int in _resource_reservations:
+		if not is_instance_id_valid(key):
+			keys_to_remove.append(key)
+	for key: int in keys_to_remove:
+		_resource_reservations.erase(key)
 
 
 func _on_state_changed(new_state: String) -> void:
@@ -600,6 +626,9 @@ func _try_leave_shelter() -> void:
 
 	# Verificar si puede salir
 	if stats.health >= HEALTH_THRESHOLD_LEAVE and stats.energy >= ENERGY_THRESHOLD_LEAVE:
+		# Clima: no salir si hay tormenta
+		if WeatherSystem.current_weather == WeatherSystem.Weather.STORM:
+			return
 		_leave_shelter()
 		return
 
@@ -747,7 +776,7 @@ func _update_debug_overlay() -> void:
 
 func _find_nearest_shelter() -> ShelterBuilding:
 	var nearest: ShelterBuilding = null
-	var nearest_distance: float = 200.0
+	var nearest_distance: float = INF
 	
 	for building in ColonyManager.buildings:
 		if building is ShelterBuilding:

@@ -467,7 +467,8 @@ func _storm_event() -> Dictionary:
 					"health": -_scaled_value(5.0),
 					"happiness": -5,
 					"wood": -_scaled_value(5.0),
-					"persistent_effect": {"name": "storm_damage", "delta": -0.5, "duration": 30.0}
+					"persistent_effect": {"name": "storm_damage", "delta": -0.5, "duration": 30.0},
+					"action": "storm_seek_shelter"
 				}
 			},
 			{
@@ -477,7 +478,8 @@ func _storm_event() -> Dictionary:
 					"wood": -_scaled_value(12.0),
 					"stone": -_scaled_value(5.0),
 					"health": -_scaled_value(2.0),
-					"happiness": 0
+					"happiness": 0,
+					"action": "storm_reinforce"
 				}
 			},
 			{
@@ -487,7 +489,8 @@ func _storm_event() -> Dictionary:
 					"health": -_scaled_value(15.0),
 					"happiness": -15,
 					"wood": -_scaled_value(10.0),
-					"persistent_effect": {"name": "storm_damage", "delta": -1.5, "duration": 45.0}
+					"persistent_effect": {"name": "storm_damage", "delta": -1.5, "duration": 45.0},
+					"action": "storm_ride_out"
 				}
 			}
 		],
@@ -497,7 +500,8 @@ func _storm_event() -> Dictionary:
 			"effects": {
 				"health": -_scaled_value(20.0),
 				"happiness": -20,
-				"wood": -_scaled_value(15.0)
+				"wood": -_scaled_value(15.0),
+				"action": "storm_default"
 			}
 		}
 	}
@@ -1437,6 +1441,14 @@ func _apply_effects(effects: Dictionary) -> void:
 					"start_research_center_construction":
 						ConstructionManager.start_research_center_construction()
 						_research_center_cooldown = RESEARCH_CENTER_COOLDOWN
+					"storm_seek_shelter":
+						WeatherSystem.force_set_weather(WeatherSystem.Weather.STORM, GameConfig.WEATHER_STORM_DURATION)
+					"storm_reinforce":
+						WeatherSystem.reduce_storm_severity(0.4)
+					"storm_ride_out":
+						WeatherSystem.force_set_weather(WeatherSystem.Weather.STORM, GameConfig.WEATHER_STORM_DURATION)
+					"storm_default":
+						WeatherSystem.force_set_weather(WeatherSystem.Weather.STORM, GameConfig.WEATHER_STORM_DURATION)
 
 
 func get_response_percentage() -> float:
