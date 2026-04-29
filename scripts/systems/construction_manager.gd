@@ -633,3 +633,39 @@ func reset() -> void:
 	construction_progress = 0.0
 	current_order = {}
 	assigned_workers.clear()
+
+
+## --- Save / Load ---
+
+func get_save_data() -> Dictionary:
+	return {
+		"has_active_order": has_active_order,
+		"construction_progress": construction_progress,
+		"build_position": [build_position.x, build_position.y],
+		"current_order_type": current_order.get("type", ""),
+	}
+
+
+func apply_save_data(data: Dictionary) -> void:
+	has_active_order = data.get("has_active_order", false)
+	construction_progress = data.get("construction_progress", 0.0)
+	var pos_arr = data.get("build_position", [0.0, 0.0])
+	build_position = Vector2(float(pos_arr[0]), float(pos_arr[1]))
+	var order_type: String = data.get("current_order_type", "")
+	if order_type != "":
+		current_order = {"type": order_type}
+	else:
+		current_order = {}
+
+	# No re-asignar workers automáticamente (los beeps se re-asignan solos)
+	assigned_workers.clear()
+
+
+## Obtener escena desde nombre string (para save/load)
+func get_scene_for_type_string(type_name: String) -> PackedScene:
+	match type_name:
+		"shelter": return SHELTER_SCENE
+		"path": return PATH_SCENE
+		"warehouse": return WAREHOUSE_SCENE
+		"research_center": return RESEARCH_CENTER_SCENE
+	return SHELTER_SCENE

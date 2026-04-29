@@ -67,7 +67,30 @@ const DECISION_INTERVAL: float = 0.5
 
 
 func _draw() -> void:
-	draw_circle(Vector2.ZERO, BEEP_RADIUS, Color(0.2, 1.0, 0.3))
+	# Color base según fase de vida
+	var base_color: Color
+	match stats.life_stage:
+		stats.LifeStage.BABY:
+			base_color = Color(0.8, 0.95, 0.4)  # Amarillo claro (baby)
+		stats.LifeStage.YOUTH:
+			base_color = Color(0.4, 0.85, 0.4)  # Verde lima (youth)
+		_:
+			base_color = Color(0.2, 1.0, 0.3)  # Verde (adult)
+
+	draw_circle(Vector2.ZERO, BEEP_RADIUS, base_color)
+
+	# Indicador de rol para adultos
+	if stats.is_adult():
+		var role: BeepRole.Role = BeepRole.get_role(self)
+		if role != BeepRole.Role.NONE:
+			var role_color: Color
+			match role:
+				BeepRole.Role.GATHERER: role_color = Color(1.0, 0.8, 0.2)  # Dorado
+				BeepRole.Role.BUILDER: role_color = Color(0.9, 0.5, 0.2)   # Naranja
+				BeepRole.Role.EXPLORER: role_color = Color(0.3, 0.6, 1.0)  # Azul
+				BeepRole.Role.GUARDIAN: role_color = Color(0.8, 0.3, 0.3)  # Rojo
+				_: role_color = Color.WHITE
+			draw_circle(Vector2.ZERO, BEEP_RADIUS + 2.0, role_color)
 
 
 func _ready() -> void:
@@ -75,12 +98,20 @@ func _ready() -> void:
 	FogOfWar.register_beep(self)
 	stats.beep_died.connect(_on_beep_died)
 	stats.state_changed.connect(_on_state_changed)
+	stats.maturity_changed.connect(_on_maturity_changed)
 	_last_position = position
 	if GameConfig.DEBUG_SHOW_BEEP_OVERLAY:
 		_debug_label = Label.new()
 		_debug_label.position = Vector2(-42, -30)
 		_debug_label.add_theme_font_size_override("font_size", 10)
 		add_child(_debug_label)
+	queue_redraw()
+
+
+func _on_maturity_changed(is_adult: bool) -> void:
+	if is_adult and not BeepRole.has_role(self):
+		# El sistema de roles se encargará de asignar en el próximo ciclo
+		pass
 	queue_redraw()
 
 
@@ -116,6 +147,18 @@ func _physics_process(delta: float) -> void:
 func _decide_action() -> void:
 	if _is_moving:
 		return
+
+	# === BEBÉ: solo comer y seguir al caregiver ===
+	if stats.is_baby():
+		_decide_baby()
+		return
+
+	# === YOUTH: recolectar, comer, descansar (sin construir ni explorar) ===
+	if stats.is_youth():
+		_decide_youth()
+		return
+
+	# === ADULTO: con posible rol especializado ===
 
 	# Si está dentro de un refugio, solo decidir si salir o quedarse
 	if _shelter != null:
@@ -156,55 +199,19 @@ func _decide_action() -> void:
 		_seek_and_enter_shelter()
 		return
 
-	var food := ResourceManager.get_food()
-	var wood := ResourceManager.get_wood()
-	var stone := ResourceManager.get_stone()
-
-	# Recursos críticos — asignar recolección prioritaria
-	var food_critical := food < 20.0
-	var wood_critical := wood < 20.0
-	var stone_critical := stone < 15.0
-
-	# Si algún recurso es crítico, recolectar ese específico
-	if wood_critical and randf() < 0.4:
-		collect_nearby_resource(ResourceType.Type.WOOD)
-		return
-	if stone_critical and randf() < 0.4:
-		collect_nearby_resource(ResourceType.Type.STONE)
-		return
-	if food_critical and randf() < 0.4:
-		seek_food()
+	# Recursos críticos — todos recolectan independientemente del rol
+	if _try_critical_resource_collection():
 		return
 
 	# Si este beep es worker pero necesita descansar, dejar construcción temporalmente
 	if ConstructionManager.assigned_workers.has(self):
 		return  # Continuar construyendo
 
-	# Verificar si la colonia debería construir un refugio
-	if ConstructionManager.should_start_construction() and randf() < 0.15:
-		ConstructionManager.start_shelter_construction()
-		join_construction()
+	# Decisiones de construcción de la colonia (cualquier adulto puede proponer)
+	if _try_colony_construction_proposal():
 		return
 
-	# Verificar si la colonia debería construir un camino (más común que refugios)
-	if ConstructionManager.should_start_path_construction() and randf() < 0.25:
-		ConstructionManager.start_path_construction()
-		join_construction()
-		return
-
-	# Building Diversity: proponer almacén si los recursos están altos
-	if ConstructionManager.should_start_warehouse_construction() and randf() < 0.12:
-		ConstructionManager.start_warehouse_construction()
-		join_construction()
-		return
-
-	# Building Diversity: proponer centro de investigación si hay conocimiento y recursos
-	if ConstructionManager.should_start_research_center_construction() and randf() < 0.08:
-		ConstructionManager.start_research_center_construction()
-		join_construction()
-		return
-
-	# Si hay una construcción activa y este beep no está asignado, unirse como worker
+	# Si hay una construcción activa y este beep no está asignado, unirse
 	if ConstructionManager.is_construction_active() and not ConstructionManager.assigned_workers.has(self):
 		join_construction()
 		return
@@ -214,7 +221,112 @@ func _decide_action() -> void:
 		join_construction()
 		return
 
-	# Distribución equilibrada: algunos buscan comida, otros madera/piedra, otros exploran
+	# === Comportamiento por rol especializado ===
+	var role: BeepRole.Role = BeepRole.get_role(self)
+	match role:
+		BeepRole.Role.GATHERER:
+			_decide_gatherer()
+		BeepRole.Role.BUILDER:
+			_decide_builder()
+		BeepRole.Role.EXPLORER:
+			_decide_explorer()
+		BeepRole.Role.GUARDIAN:
+			_decide_guardian()
+		_:
+			_decide_general()
+
+
+## === DECISIONES POR FASE DE VIDA ===
+
+func _decide_baby() -> void:
+	# Un baby necesita comida
+	if stats.hunger > GameConfig.HUNGER_THRESHOLD_WORK:
+		eat()
+		return
+	# Si no tiene nada que hacer, permanecer cerca del caregiver
+	stats.set_state(BeepStats.State.IDLE)
+	stats.assigned_task = "baby_idle"
+
+
+func _decide_youth() -> void:
+	# Youth puede recolectar y comer pero NO construir ni explorar
+	if stats.hunger > GameConfig.HUNGER_THRESHOLD_WORK:
+		seek_food()
+		return
+	# Recolectar recursos básicos
+	var roll: float = randf()
+	if roll < 0.4:
+		seek_food()
+	elif roll < 0.7:
+		collect_nearby_resource(ResourceType.Type.WOOD)
+	else:
+		collect_nearby_resource(ResourceType.Type.STONE)
+
+
+## === DECISIONES POR ROL (solo adultos) ===
+
+func _decide_gatherer() -> void:
+	# Prioriza comida, luego madera y piedra
+	var roll: float = randf()
+	if roll < 0.5:
+		seek_food()
+	elif roll < 0.75:
+		collect_nearby_resource(ResourceType.Type.WOOD)
+	else:
+		collect_nearby_resource(ResourceType.Type.STONE)
+
+
+func _decide_builder() -> void:
+	# Prioriza unirse a construcciones activas
+	if ConstructionManager.is_construction_active():
+		join_construction()
+		return
+	# Proponer nuevas construcciones con mayor probabilidad que los demás
+	var roll: float = randf()
+	if roll < 0.25:
+		ConstructionManager.start_shelter_construction()
+		join_construction()
+	elif roll < 0.5:
+		ConstructionManager.start_path_construction()
+		join_construction()
+	elif roll < 0.65:
+		ConstructionManager.start_warehouse_construction()
+		join_construction()
+	elif roll < 0.75:
+		ConstructionManager.start_research_center_construction()
+		join_construction()
+	else:
+		# Recolectar materiales necesarios para construcción
+		collect_nearby_resource(ResourceType.Type.WOOD)
+
+
+func _decide_explorer() -> void:
+	# Prioriza exploración y descubrimiento
+	var roll: float = randf()
+	if roll < 0.5:
+		explore()
+	elif roll < 0.7:
+		seek_food()
+	else:
+		wander()
+
+
+func _decide_guardian() -> void:
+	# Guardián: mantiene la colonia segura, recolecta y patrulla
+	# Por ahora patrulla cerca de los refugios (base para sistema de defensa)
+	var roll: float = randf()
+	if roll < 0.3:
+		_patrol_near_shelter()
+	elif roll < 0.5:
+		seek_food()
+	elif roll < 0.7:
+		collect_nearby_resource(ResourceType.Type.WOOD)
+	else:
+		explore()
+
+
+func _decide_general() -> void:
+	# Sin rol asignado: distribución equilibrada
 	var roll: float = randf()
 	if roll < 0.3:
 		seek_food()
@@ -224,6 +336,64 @@ func _decide_action() -> void:
 		collect_nearby_resource(ResourceType.Type.STONE)
 	elif roll < 0.85:
 		explore()
+	else:
+		wander()
+
+
+## === MÉTODOS AUXILIARES ===
+
+## Intentar recolectar recursos críticos (anula el rol)
+func _try_critical_resource_collection() -> bool:
+	var food := ResourceManager.get_food()
+	var wood := ResourceManager.get_wood()
+	var stone := ResourceManager.get_stone()
+
+	var food_critical := food < 20.0
+	var wood_critical := wood < 20.0
+	var stone_critical := stone < 15.0
+
+	if wood_critical and randf() < 0.4:
+		collect_nearby_resource(ResourceType.Type.WOOD)
+		return true
+	if stone_critical and randf() < 0.4:
+		collect_nearby_resource(ResourceType.Type.STONE)
+		return true
+	if food_critical and randf() < 0.4:
+		seek_food()
+		return true
+	return false
+
+
+## Intentar proponer construcción de la colonia
+func _try_colony_construction_proposal() -> bool:
+	if ConstructionManager.should_start_construction() and randf() < 0.15:
+		ConstructionManager.start_shelter_construction()
+		join_construction()
+		return true
+	if ConstructionManager.should_start_path_construction() and randf() < 0.25:
+		ConstructionManager.start_path_construction()
+		join_construction()
+		return true
+	if ConstructionManager.should_start_warehouse_construction() and randf() < 0.12:
+		ConstructionManager.start_warehouse_construction()
+		join_construction()
+		return true
+	if ConstructionManager.should_start_research_center_construction() and randf() < 0.08:
+		ConstructionManager.start_research_center_construction()
+		join_construction()
+		return true
+	return false
+
+
+## Patrullar cerca del refugio más cercano
+func _patrol_near_shelter() -> void:
+	var shelter = _find_nearest_shelter()
+	if shelter:
+		var offset_angle = randf() * TAU
+		var distance = 40.0 + randf() * 60.0
+		var target = shelter.position + Vector2.from_angle(offset_angle) * distance
+		move_to(target)
+		stats.assigned_task = "patrolling"
 	else:
 		wander()
 
@@ -417,6 +587,7 @@ func _on_beep_died() -> void:
 
 	ColonyManager.unregister_beep(self)
 	FogOfWar.unregister_beep(self)
+	BeepRole.clear_role(self)
 	queue_free()
 
 
@@ -771,7 +942,9 @@ func _update_debug_overlay() -> void:
 	var target_name := "none"
 	if _current_target != null and is_instance_valid(_current_target):
 		target_name = _current_target.name
-	_debug_label.text = "E:%d\n%s\n→ %s" % [int(stats.energy), stats.assigned_task, target_name]
+	var role_text := BeepRole.role_name(BeepRole.get_role(self))
+	var stage_text := stats.get_life_stage_name()
+	_debug_label.text = "%s [%s]\nE:%d %s\n%s → %s" % [stage_text, role_text, int(stats.energy), stats.assigned_task, "", target_name]
 
 
 func _find_nearest_shelter() -> ShelterBuilding:

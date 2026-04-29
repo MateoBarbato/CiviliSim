@@ -2114,3 +2114,33 @@ func _chain_expansion_boom_event() -> Dictionary:
 			"advance_chain": false
 		}
 	}
+
+
+## --- Save / Load ---
+
+func get_save_data() -> Dictionary:
+	return {
+		"decision_timer": decision_timer,
+		"response_timer": response_timer,
+		"is_event_active": is_event_active,
+		"difficulty_phase": _difficulty_phase,
+		"difficulty_multiplier": _difficulty_multiplier,
+		"resolved_history": _resolved_history.duplicate(),
+		"invasion_cooldown": _invasion_cooldown,
+		"discovery_cooldown": _discovery_cooldown,
+		"warehouse_cooldown": _warehouse_cooldown,
+		"research_center_cooldown": _research_center_cooldown,
+	}
+
+
+func apply_save_data(data: Dictionary) -> void:
+	decision_timer = data.get("decision_timer", 0.0)
+	response_timer = data.get("response_timer", 0.0)
+	is_event_active = data.get("is_event_active", false)
+	_difficulty_phase = data.get("difficulty_phase", _difficulty_phase)
+	_difficulty_multiplier = data.get("difficulty_multiplier", _difficulty_multiplier)
+	_resolved_history = data.get("resolved_history", _resolved_history)
+	_invasion_cooldown = data.get("invasion_cooldown", 0.0)
+	_discovery_cooldown = data.get("discovery_cooldown", 0.0)
+	_warehouse_cooldown = data.get("warehouse_cooldown", 0.0)
+	_research_center_cooldown = data.get("research_center_cooldown", 0.0)

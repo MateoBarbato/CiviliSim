@@ -150,3 +150,25 @@ func _init_max_capacity() -> void:
 	max_food = BASE_MAX_FOOD
 	max_wood = BASE_MAX_WOOD
 	max_stone = BASE_MAX_STONE
+
+
+## --- Save / Load ---
+
+func get_save_data() -> Dictionary:
+	return {
+		"food": food,
+		"wood": wood,
+		"stone": stone,
+		"max_food": max_food,
+		"max_wood": max_wood,
+		"max_stone": max_stone,
+	}
+
+
+func apply_save_data(data: Dictionary) -> void:
+	food = data.get("food", food)
+	wood = data.get("wood", wood)
+	stone = data.get("stone", stone)
+	max_food = data.get("max_food", max_food)
+	max_wood = data.get("max_wood", max_wood)
+	max_stone = data.get("max_stone", max_stone)

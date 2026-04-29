@@ -14,6 +14,9 @@ enum ColonyPriority { FOOD, CONSTRUCTION, EXPLORATION }
 ## Estado de la colonia
 var colony_priority: ColonyPriority = ColonyPriority.FOOD
 var population: int = 0
+var adults: int = 0
+var youths: int = 0
+var babies: int = 0
 var happiness: float = 75.0
 var health_average: float = 80.0
 var social_order: float = 70.0
@@ -49,6 +52,9 @@ func _process(delta: float) -> void:
 
 func _init_colony() -> void:
 	population = 0
+	adults = 0
+	youths = 0
+	babies = 0
 	happiness = 75.0
 	health_average = 80.0
 	social_order = 70.0
@@ -121,6 +127,9 @@ func _update_colony_stats(delta: float) -> void:
 	
 	var total_health: float = 0.0
 	var alive_count: int = 0
+	var a: int = 0
+	var y: int = 0
+	var b: int = 0
 	
 	for beep in beeps:
 		if beep.is_queued_for_deletion():
@@ -128,11 +137,23 @@ func _update_colony_stats(delta: float) -> void:
 		if beep.has_method("get_health"):
 			total_health += beep.get_health()
 			alive_count += 1
+		# Contar por fase de vida
+		if beep.has_method("stats") and beep.stats != null:
+			if beep.stats.is_adult():
+				a += 1
+			elif beep.stats.is_youth():
+				y += 1
+			else:
+				b += 1
 	
 	if alive_count > 0:
 		health_average = total_health / alive_count
 	else:
 		health_average = 0.0
+	
+	adults = a
+	youths = y
+	babies = b
 	
 	# La felicidad se ve afectada por la salud promedio
 	if health_average < 50:
@@ -176,3 +197,27 @@ func get_beep_count() -> int:
 
 func get_building_count() -> int:
 	return buildings.size()
+
+
+## --- Save / Load ---
+
+func get_save_data() -> Dictionary:
+	return {
+		"priority": colony_priority,
+		"happiness": happiness,
+		"health_average": health_average,
+		"social_order": social_order,
+		"knowledge": knowledge,
+		"game_time": game_time,
+		"debug_mode": debug_mode,
+	}
+
+
+func apply_save_data(data: Dictionary) -> void:
+	colony_priority = data.get("priority", colony_priority)
+	happiness = data.get("happiness", happiness)
+	health_average = data.get("health_average", health_average)
+	social_order = data.get("social_order", social_order)
+	knowledge = data.get("knowledge", knowledge)
+	game_time = data.get("game_time", game_time)
+	debug_mode = data.get("debug_mode", debug_mode)

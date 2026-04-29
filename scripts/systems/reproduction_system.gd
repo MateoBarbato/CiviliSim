@@ -163,12 +163,16 @@ func _spawn_new_beep(parents: Dictionary) -> void:
 	if parent:
 		parent.add_child(new_beep)
 	
+	# Inicializar como baby
+	if new_beep.has_method("stats"):
+		new_beep.stats.init_as_baby()
+	
 	_inherit_stats(new_beep, parent1, parent2)
 	
 	beep_reproduced.emit(new_beep)
 	
 	if GameConfig.DEBUG_PRINT_REPRODUCTION:
-		print("🐣 Nuevo Beep spawneado en: ", spawn_pos)
+		print("🐣 Baby Beep nacido en: ", spawn_pos)
 
 
 func _calculate_spawn_position(parent1: Node2D, parent2: Node2D) -> Vector2:
@@ -181,13 +185,12 @@ func _calculate_spawn_position(parent1: Node2D, parent2: Node2D) -> Vector2:
 
 
 func _inherit_stats(new_beep: Node2D, parent1: Node2D, parent2: Node2D) -> void:
-	if new_beep.has_method("get_stats"):
-		var stats_node = new_beep.get_node_or_null("BeepStats")
-		if stats_node:
-			var h1 = parent1.get_health() if parent1.has_method("get_health") else 100.0
-			var h2 = parent2.get_health() if parent2.has_method("get_health") else 100.0
-			stats_node.health = (h1 + h2) / 2.0 * 1.1
-			stats_node.health = minf(stats_node.health, 100.0)
+	if new_beep.has_method("stats"):
+		var stats_node = new_beep.stats
+		var h1 = parent1.get_health() if parent1.has_method("get_health") else 100.0
+		var h2 = parent2.get_health() if parent2.has_method("get_health") else 100.0
+		# Herencia: promedio de padres con pequeño bonus, capped a 100
+		stats_node.health = minf((h1 + h2) / 2.0 * 1.1, 100.0)
 
 
 func get_statistics() -> Dictionary:
@@ -210,3 +213,23 @@ func reset() -> void:
 	total_births = 0
 	total_failures = 0
 	fertility_progress = 0.0
+
+
+## --- Save / Load ---
+
+func get_save_data() -> Dictionary:
+	return {
+		"reproduction_timer": reproduction_timer,
+		"reproduction_cooldown": reproduction_cooldown,
+		"total_births": total_births,
+		"total_failures": total_failures,
+		"fertility_progress": fertility_progress,
+	}
+
+
+func apply_save_data(data: Dictionary) -> void:
+	reproduction_timer = data.get("reproduction_timer", 0.0)
+	reproduction_cooldown = data.get("reproduction_cooldown", 0.0)
+	total_births = data.get("total_births", 0)
+	total_failures = data.get("total_failures", 0)
+	fertility_progress = data.get("fertility_progress", 0.0)

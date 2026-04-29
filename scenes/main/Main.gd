@@ -128,6 +128,13 @@ func _update_hud() -> void:
 		fertility_pct = int(reproduction_system.get_statistics().get("fertility_progress", 0.0))
 	fertility_label.text = "💞 %d%%" % fertility_pct
 
+	# Roles breakdown
+	var gatherers := BeepRole.count_role(BeepRole.Role.GATHERER)
+	var builders := BeepRole.count_role(BeepRole.Role.BUILDER)
+	var explorers := BeepRole.count_role(BeepRole.Role.EXPLORER)
+	var guardians := BeepRole.count_role(BeepRole.Role.GUARDIAN)
+	fertility_label.text = "🌾%d 🔨%d 🧭%d 🛡%d" % [gatherers, builders, explorers, guardians]
+
 	# Construction status
 	if ConstructionManager.is_construction_active():
 		var prog: float = ConstructionManager.get_progress()
@@ -141,6 +148,22 @@ func _update_hud() -> void:
 	# Exploration progress
 	var explored_pct := int(FogOfWar.get_exploration_percentage() * 100.0)
 	exploration_label.text = "🗺️ %d%%" % explored_pct
+
+	# Age breakdown (babes, youth, adults)
+	var baby_count := 0
+	var youth_count := 0
+	var adult_count := 0
+	for beep in ColonyManager.beeps:
+		if beep == null or beep.is_queued_for_deletion() or not beep.has_method("stats"):
+			continue
+		if beep.stats.is_baby():
+			baby_count += 1
+		elif beep.stats.is_youth():
+			youth_count += 1
+		else:
+			adult_count += 1
+	# Override beep_states_label with age breakdown
+	beep_states_label.text = "👶%d 🧑%d 🧑‍🔧%d" % [baby_count, youth_count, adult_count]
 
 
 func _on_start_menu_pressed() -> void:

@@ -32,6 +32,8 @@ ResourceManager="*res://scripts/systems/resource_manager.gd"
 WeatherSystem="*res://scripts/systems/weather_system.gd"
 ConstructionManager="*res://scripts/systems/construction_manager.gd"
 FogOfWar="*res://scripts/systems/fog_of_war.gd"
+BeepRole="*res://scripts/systems/beep_role.gd"
+SaveSystem="*res://scripts/systems/save_system.gd"
 
 [display]
 

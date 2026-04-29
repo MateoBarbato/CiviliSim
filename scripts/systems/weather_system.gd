@@ -235,3 +235,27 @@ func _random_change_interval() -> float:
 		GameConfig.WEATHER_CHANGE_MIN_INTERVAL,
 		GameConfig.WEATHER_CHANGE_MAX_INTERVAL
 	)
+
+
+## --- Save / Load ---
+
+func get_save_data() -> Dictionary:
+	return {
+		"current_weather": current_weather,
+		"weather_timer": _weather_timer,
+		"weather_duration": _weather_duration,
+		"is_forced": _is_forced,
+		"forced_duration": _forced_duration,
+		"storm_severity": storm_severity,
+		"intensity": intensity,
+	}
+
+
+func apply_save_data(data: Dictionary) -> void:
+	current_weather = data.get("current_weather", current_weather)
+	_weather_timer = data.get("weather_timer", _weather_timer)
+	_weather_duration = data.get("weather_duration", _weather_duration)
+	_is_forced = data.get("is_forced", false)
+	_forced_duration = data.get("forced_duration", _forced_duration)
+	storm_severity = data.get("storm_severity", storm_severity)
+	intensity = data.get("intensity", intensity)

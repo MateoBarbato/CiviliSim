@@ -1,8 +1,0 @@
-res://scenes/ui/decision_panel.gd
-res://scripts/systems/decision_system.gd
-res://scenes/main/Main.gd
-res://scenes/world/World.gd
-res://scenes/beep/BeepAgent.gd
-res://scenes/resources/ResourceNode.gd
-res://scripts/data/game_config.gd
-res://scripts/systems/reproduction_system.gd

@@ -131,3 +131,28 @@ const WEATHER_STORM_RESOURCE_DESTRUCT_CHANCE: float = 0.002
 
 ## Shake de cámara en tormenta
 const WEATHER_STORM_SHAKE_STRENGTH: float = 2.0
+
+# --- Roles especializados ---
+## Porcentaje máximo de la población adulta por rol (se aplica al auto-asignar)
+const ROLE_GATHERER_TARGET_PCT: float = 0.40   # 40% recolectores
+const ROLE_BUILDER_TARGET_PCT: float = 0.20    # 20% constructores
+const ROLE_EXPLORER_TARGET_PCT: float = 0.15   # 15% exploradores
+const ROLE_GUARDIAN_TARGET_PCT: float = 0.15   # 15% guardianes
+## Intervalo en segundos para re-evaluar distribución de roles
+const ROLE_REASSIGN_INTERVAL: float = 60.0
+## Mínimo de adultos para empezar a asignar roles
+const ROLE_MIN_ADULTS: int = 3
+
+# --- Crianza ---
+## Duración de fase BABY (segundos) — no trabaja, sigue al caregiver
+const BABY_DURATION: float = 30.0
+## Duración de fase YOUTH (segundos) — recolecta solo, sin construcción
+const YOUTH_DURATION: float = 60.0
+## Edad a la que un beep es adulto completo
+const MATURITY_AGE: float = 90.0
+## Comida que consume un baby por segundo (más que adulto)
+const BABY_FOOD_CONSUME_RATE: float = 0.008
+## Distancia máxima baby-caregiver
+const BABY_CAREGIVER_MAX_DIST: float = 80.0
+## Chance por tick de que un youth se separe del caregiver
+const YOUTH_SEPARATE_CHANCE: float = 0.01

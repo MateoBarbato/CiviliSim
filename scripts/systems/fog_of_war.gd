@@ -192,3 +192,35 @@ func _get_tile_state(pos: Vector2i) -> TileState:
 
 func _set_tile_state(pos: Vector2i, state: TileState) -> void:
 	_fog_grid[pos] = state
+
+
+## --- Save / Load ---
+
+func get_save_data() -> Dictionary:
+	# Guardar solo tiles VISITED (no VISIBLE que se re-calcula)
+	var visited: Array = []
+	for pos in _fog_grid:
+		if _fog_grid[pos] == TileState.VISITED:
+			visited.append({"x": pos.x, "y": pos.y})
+
+	return {
+		"visited_tiles": visited,
+		"revealed_count": _revealed_count,
+	}
+
+
+func apply_save_data(data: Dictionary) -> void:
+	_fog_grid.clear()
+	_revealed_count = data.get("revealed_count", 0)
+
+	var visited_tiles: Array = data.get("visited_tiles", [])
+	for tile_data in visited_tiles:
+		var pos: Vector2i = Vector2i(int(tile_data.get("x", 0)), int(tile_data.get("y", 0)))
+		_fog_grid[pos] = TileState.VISITED
+
+
+func reset() -> void:
+	_fog_grid.clear()
+	_revealed_count = 0
+	_active_beeps.clear()
+	_update_timer = 0.0

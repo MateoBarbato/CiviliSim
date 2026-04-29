@@ -89,6 +89,13 @@ func get_amount() -> float:
 	return _amount
 
 
+func set_amount(amount: float) -> void:
+	_amount = clampf(amount, 0.0, _max_amount)
+	if _amount > 0 and not _is_active:
+		_is_active = true
+	_update_visuals()
+
+
 func is_active() -> bool:
 	return _is_active
 
